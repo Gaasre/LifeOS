@@ -1,0 +1,10 @@
+{
+  "extends": "../config/tsconfig/base.json",
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": false,
+    "paths": {
+      "@lifeos/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}

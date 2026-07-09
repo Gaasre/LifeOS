@@ -1,0 +1,19 @@
+{
+  "name": "@lifeos/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "better-auth": "^1.6.23"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

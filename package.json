@@ -1,0 +1,17 @@
+{
+  "name": "lifeos",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "turbo": "^2.10.4",
+    "typescript": "^7.0.2"
+  }
+}

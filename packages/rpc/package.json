@@ -1,0 +1,21 @@
+{
+  "name": "@lifeos/rpc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.14.7",
+    "@orpc/react": "^1.14.7",
+    "@orpc/server": "^1.14.7"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
