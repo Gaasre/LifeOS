@@ -1,4 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
+import { Link } from "react-router-dom";
 
 import { Card } from "@lifeos/ui/components/card";
 import { cn } from "@lifeos/ui/lib/utils";
@@ -8,6 +9,7 @@ type ModuleCardProps = {
   description: string;
   image: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
+  href?: string;
   className?: string;
 };
 
@@ -16,12 +18,13 @@ export function ModuleCard({
   description,
   image,
   icon: Icon,
+  href,
   className,
 }: ModuleCardProps) {
-  return (
+  const card = (
     <Card
       className={cn(
-        "group/module relative isolate col-span-12 min-h-49 cursor-pointer overflow-hidden rounded-[0.5rem] border border-transparent bg-muted/20 p-0 text-card-foreground shadow-[0_24px_70px_-48px_rgb(0_0_0_/_0.95),inset_0_1px_0_rgb(255_255_255_/_0.035),inset_0_-1px_0_rgb(255_255_255_/_0.018)] ring-1 ring-foreground/[0.025] outline-none transition-[box-shadow,translate] duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_34px_90px_-46px_rgb(0_0_0_/_1),inset_0_1px_0_rgb(255_255_255_/_0.09),inset_0_0_0_1px_rgb(255_255_255_/_0.09)] hover:ring-foreground/10 focus-within:-translate-y-1.5 focus-within:shadow-[0_34px_90px_-46px_rgb(0_0_0_/_1),inset_0_1px_0_rgb(255_255_255_/_0.09),inset_0_0_0_1px_rgb(255_255_255_/_0.09)] focus-within:ring-foreground/10 sm:col-span-6 xl:col-span-3 xl:min-h-60",
+        "relative isolate min-h-49 overflow-hidden rounded-[0.5rem] border border-transparent bg-muted/20 p-0 text-card-foreground shadow-[0_24px_70px_-48px_rgb(0_0_0_/_0.95),inset_0_1px_0_rgb(255_255_255_/_0.035),inset_0_-1px_0_rgb(255_255_255_/_0.018)] ring-1 ring-foreground/[0.025] outline-none transition-[box-shadow,translate] duration-500 ease-out group-hover/module:-translate-y-1.5 group-hover/module:shadow-[0_34px_90px_-46px_rgb(0_0_0_/_1),inset_0_1px_0_rgb(255_255_255_/_0.09),inset_0_0_0_1px_rgb(255_255_255_/_0.09)] group-hover/module:ring-foreground/10 group-focus-visible/module:-translate-y-1.5 group-focus-visible/module:ring-3 group-focus-visible/module:ring-ring/50 xl:min-h-60",
         className,
       )}
     >
@@ -59,5 +62,22 @@ export function ModuleCard({
         </div>
       </div>
     </Card>
+  );
+
+  if (!href) {
+    return (
+      <div className="group/module col-span-12 sm:col-span-6 xl:col-span-3">
+        {card}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      to={href}
+      className="group/module col-span-12 rounded-lg outline-none sm:col-span-6 xl:col-span-3"
+    >
+      {card}
+    </Link>
   );
 }

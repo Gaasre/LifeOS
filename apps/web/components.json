@@ -10,15 +10,17 @@
     "cssVariables": true
   },
   "iconLibrary": "lucide",
-  "aliases": {
-    "components": "@/components",
-    "hooks": "@lifeos/ui/hooks",
-    "lib": "@/lib",
-    "utils": "@lifeos/ui/lib/utils",
-    "ui": "@lifeos/ui/components"
-  },
   "rtl": false,
   "menuColor": "default-translucent",
   "menuAccent": "subtle",
-  "registries": {}
+  "aliases": {
+    "components": "@/components",
+    "utils": "@lifeos/ui/lib/utils",
+    "ui": "@lifeos/ui/components",
+    "lib": "@/lib",
+    "hooks": "@lifeos/ui/hooks"
+  },
+  "registries": {
+    "@reui": "https://reui.io/r/{style}/{name}.json"
+  }
 }
