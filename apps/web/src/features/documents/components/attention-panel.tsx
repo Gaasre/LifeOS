@@ -22,6 +22,7 @@ import {
 } from "@lifeos/ui/components/collapsible";
 import { cn } from "@lifeos/ui/lib/utils";
 
+import { DocumentFilePreview } from "@/features/documents/components/document-file-preview";
 import type { LifeDocument } from "@/features/documents/types";
 
 type AttentionPanelProps = {
@@ -35,11 +36,7 @@ export function AttentionPanel({ documents, onOpen }: AttentionPanelProps) {
   if (documents.length === 0) return null;
 
   return (
-    <section
-      className="documents-section-enter"
-      style={{ animationDelay: "90ms" }}
-      aria-labelledby="attention-title"
-    >
+    <section aria-labelledby="attention-title">
       <Collapsible open={open} onOpenChange={setOpen}>
         <Card
           size="sm"
@@ -65,10 +62,10 @@ export function AttentionPanel({ documents, onOpen }: AttentionPanelProps) {
                 variant="ghost"
                 size="sm"
                 aria-label={
-                  open ? "Hide attention items" : "Review attention items"
+                  open ? "Hide attention items" : "Show attention items"
                 }
               >
-                {open ? "Hide" : "Review"}
+                {open ? "Hide" : "Show"}
                 <ChevronDownIcon
                   data-icon="inline-end"
                   className={cn(
@@ -92,14 +89,10 @@ export function AttentionPanel({ documents, onOpen }: AttentionPanelProps) {
                     style={{ animationDelay: `${index * 45}ms` }}
                     onClick={() => onOpen(document)}
                   >
-                    <img
-                      src={document.preview}
+                    <DocumentFilePreview
+                      document={document}
                       alt=""
-                      width={1086}
-                      height={1448}
-                      loading="lazy"
-                      className="h-10 w-8 shrink-0 rounded-sm object-cover object-top ring-1 ring-foreground/10"
-                      aria-hidden
+                      className="h-10 w-8 shrink-0 rounded-sm ring-1 ring-foreground/10"
                     />
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="truncate font-medium">

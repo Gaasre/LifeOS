@@ -1,3 +1,133 @@
+# Authentication flow design QA
+
+**Comparison target**
+
+- Source visual truth: `/Users/gaasre/.codex/generated_images/019f4bf0-3dd0-7092-9c3a-af8a20dc62dd/exec-4b12b06b-6707-482c-9f16-dc166da2d2f0.png`.
+- Browser-rendered implementation: `docs/design-qa/auth-login-desktop-final.png` and `docs/design-qa/auth-login-mobile-final.png`.
+- Route: `http://127.0.0.1:5175/login`, with companion routes `/signup` and `/forgot-password`.
+- Viewports: 1440 × 1024 desktop and 390 × 844 mobile.
+- State: dark theme, populated email and password fields, email focused, sign-in selected.
+
+**Full-view comparison evidence**
+
+The approved direction and final browser capture were placed together in `docs/design-qa/auth-login-comparison.jpg` at the same 1440 × 1024 viewport. The final layout preserves the source's balanced split, atmospheric portrait field, LifeOS mark, lower-left editorial statement, compact segmented mode switch, narrow form column, generous negative space, and email/password-only sign-in path.
+
+**Focused region comparison evidence**
+
+- `docs/design-qa/auth-login-right-focused.jpg` compares the form regions at native scale. The final switch, heading, field widths, labels, focus treatment, password affordance, recovery link, primary action, account-creation link, and help position align with the approved hierarchy and density.
+- `docs/design-qa/auth-login-left-focused.jpg` compares the visual field at native scale. The final image preserves the source subject, crop, black-to-copper palette, logo placement, headline measure, and lower-left spacing without stretching the raster artwork.
+
+**Findings**
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the existing Outfit variable font is preserved for product and display copy. Sizes, optical weights, line heights, wrapping, and muted-to-primary hierarchy match the selected direction; the two-line hero remains stable at the verified desktop width.
+- Spacing and layout rhythm: the 50/50 desktop split, 372 px form column, 48 px segmented switch, 56 px inputs, 64 px sign-in action, 10–12 px radii, and major vertical anchors track the source. The 390 px layout has no horizontal overflow (`clientWidth: 390`, `scrollWidth: 390`) and keeps the primary action and create-account path within the initial viewport.
+- Colors and visual tokens: the implementation stays on LifeOS background, foreground, muted, input, border, and ring tokens. The primary action uses the semantic foreground/background pair to reach the source's near-white emphasis; no new accent palette was introduced.
+- Image quality and asset fidelity: `apps/web/public/images/auth-me-portrait.png` is a project-local portrait extension of the existing LifeOS “Me” artwork, generated for the selected crop and used as a real raster asset. It remains sharp at desktop size, retains the restrained copper linework, and fades into the form surface without a stretched landscape crop.
+- Copy and content: visible sign-in copy matches the approved frame. Account creation, verification confirmation, password recovery, and validation copy remain calm and direct. No Apple, Google, passkey, phone, magic-link, or SSO entry was added.
+- Accessibility and interaction: inputs have explicit labels, correct autocomplete values, focus rings, invalid states, live field errors, a named password-visibility control, keyboard-reachable tabs and links, loading states, and a touch-safe mobile layout.
+
+**Comparison history**
+
+- Earlier P2 — the first browser pass used a 32 px segmented control and centered the form slightly too far right and low.
+  - Fix: set the selected 48 px control height, shifted the desktop form column to the source anchor, and matched the 1440 × 1024 top offset.
+  - Post-fix evidence: `docs/design-qa/auth-login-desktop-pass-2.png` and `docs/design-qa/auth-login-right-focused.jpg`.
+- Earlier P2 — the hero statement sat below the source anchor and the primary action was too muted.
+  - Fix: raised the lower-left copy to the source baseline, retained the wider visual breathing room, and promoted the action to the semantic near-white foreground treatment.
+  - Post-fix evidence: `docs/design-qa/auth-login-left-focused.jpg` and `docs/design-qa/auth-login-desktop-final.png`.
+- Follow-up crop refinement — at the shorter 1280 × 720 desktop frame, the centered artwork crop clipped the top of the head.
+  - Fix: moved the desktop artwork focal point upward within the image so the subject renders lower in the viewport without changing its scale, the copy, or the 1440 × 1024 composition.
+  - Post-fix evidence: `docs/design-qa/auth-login-short-desktop-crop.png` and `docs/design-qa/auth-login-desktop-crop-adjusted.png`.
+
+**Primary interactions tested**
+
+- Switched between Sign in and Create account and verified the URL and selected tab update together.
+- Submitted an empty create-account form and verified name, email, password, and terms errors appear with accessible alert semantics.
+- Filled the complete create-account form, accepted the terms, toggled password visibility, submitted, and verified the confirmation-email state.
+- Opened password recovery, submitted a valid email, and verified the reset-instructions state.
+- Filled email and password, submitted sign-in, observed the loading state and confirmation toast, and verified navigation to the LifeOS home screen.
+- Verified the login and sign-up surfaces at 390 × 844 with no horizontal overflow.
+
+**Build and diagnostics**
+
+- Web typecheck: passed.
+- Web production build: passed.
+- Browser console warnings/errors on the verified auth route: none.
+
+**Follow-up polish**
+
+- The generated portrait has minor contour differences from the conceptual mock at close inspection; this is acceptable P3 drift and remains faithful to the original LifeOS “Me” art direction.
+
+final result: passed
+
+---
+
+# Money module design QA
+
+**Comparison target**
+
+- Source visual truth: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-2caacd64-812b-4ec5-9295-d7c9a2feb3a5.png`, used as the composition and mood reference, together with the established LifeOS Documents and Projects page structure requested by the user.
+- Browser-rendered implementation: `docs/design-qa/money-overview-desktop-pass-2.png`, `docs/design-qa/money-overview-mobile-pass-1.png`, `docs/design-qa/money-overview-lower-previews.png`, and `docs/design-qa/money-calculation-dialog.png`.
+- Route: `http://127.0.0.1:5173/money`.
+- Viewports: 1680 × 941 desktop (source is 1672 × 941 and was normalized to 1680 px for comparison) and 390 × 844 mobile.
+- State: dark theme, Household scope, realistic EUR account, recurring, activity, goal, and decision data; safe-to-spend period ending at the next known income on 25 July.
+
+**Full-view comparison evidence**
+
+The supplied reference and final desktop implementation were placed into the same original-resolution comparison input at `docs/design-qa/money-overview-comparison-pass-2.png`. The final implementation preserves the reference's graphite atmosphere, restrained champagne accent, quiet borders, real photographic Money artwork, upcoming-movement hierarchy, compact secondary summaries, and low-noise typography. The hero is intentionally reframed around safe-to-spend, rather than the reference's equal-weight monthly snapshot, because safe-to-spend is the product brief's primary household promise. The 128 px content indent and title scale follow the existing LifeOS Documents and Projects modules.
+
+**Focused region comparison evidence**
+
+`docs/design-qa/money-overview-focused-comparison.png` places the reference's recurring/goal/decision card region and the implementation's account/recurring/goal previews into one native-scale comparison. It confirms matching surface restraint, border opacity, card radius, compact row density, subdued secondary copy, progress treatment, and champagne accent. The different card selection is intentional: the written brief requires only Accounts, Recurring, and Goals previews on Overview, while Decisions has its own full section.
+
+**Findings**
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the final page uses the existing Outfit variable family and the same display hierarchy as Documents and Projects. The page title is 53.6 px at desktop, safe-to-spend is the single dominant numeric treatment, row labels remain compact, and the 390 px capture has no clipped or awkwardly wrapped text.
+- Spacing and layout rhythm: the desktop uses the LifeOS 92 rem shell, 128 px module indent, a 12-column 8/4 hero split, 16 px section gaps, 10–12 px surface radii, and low-contrast dividers. The mobile layout stacks cleanly, keeps horizontal tabs scrollable, and has equal `scrollWidth` and `innerWidth` at 390 px.
+- Colors and visual tokens: Money adds one semantic `--money-accent` mapped to a subdued champagne OKLCH value. Background, card, border, foreground, muted, warning, success, and focus states continue to use shared LifeOS tokens.
+- Image quality and asset fidelity: the hero uses the existing project-local `apps/web/public/images/money.jpg` raster at its native financial subject and a measured full-bleed crop. The source's ocean and mountain imagery was treated as mood inspiration rather than copied because the user explicitly allowed alignment with the other LifeOS modules. No placeholder imagery, emoji, handcrafted SVG, or newly improvised decorative asset was introduced.
+- Copy and content: safe-to-spend, calculation boundaries, account-source-of-truth behavior, missing-income fallback, stale-balance warnings, currency exclusions, scenario-only Decisions, and the exact requested empty states are all stated in calm plain language.
+- Icons and controls: Lucide icons match the existing LifeOS icon family and remain optically aligned at 14–16 px. Tabs, selectors, dropdown actions, progress bars, command palette, filters, switches, and dialogs expose real interaction states.
+- Accessibility and responsiveness: sections and loading/error states are named, form controls have explicit labels, dialogs and menus use Radix primitives, keyboard focus is visible, reduced motion is respected, and the 340 px-wide mobile goal dialog has no horizontal overflow and a scrollable 737 px task surface.
+- Document and project connections: source documents remain references in Documents and surface as linked evidence badges in relevant Money records. Goals and Decisions also surface related-project state without duplicating project data.
+
+**Comparison history**
+
+- Earlier P2 — the first browser implementation used an oversized slab-serif module title and left the Money content full-width, which drifted from the current Documents and Projects hierarchy.
+  - Fix: moved the module content onto the established 128 px desktop indent, changed the title to the shared Outfit display treatment, reduced the title and hero heights, and kept safe-to-spend—not the page title—as the visual anchor.
+  - Post-fix evidence: `docs/design-qa/money-overview-desktop-pass-1.png`, `docs/design-qa/money-overview-desktop-pass-2.png`, and `docs/design-qa/money-overview-comparison-pass-2.png`.
+- Earlier P2 — the calculation dialog correctly excluded future income from safe-to-spend but labeled the next known income as €0, which made a transparent formula look internally inconsistent.
+  - Fix: the calculation now reports the next income amount separately while continuing to exclude it from the conservative safe-to-spend operand chain. Zero-value deductions no longer render as negative zero.
+  - Post-fix evidence: `docs/design-qa/money-calculation-dialog.png` and the passing calculation test suite.
+
+**Primary interactions tested**
+
+- Loaded `/money` with an authenticated Household and verified the real service response.
+- Opened the calculation dialog and verified all operands, the period boundary, the next income label, and the corrected €4,250 separate income value.
+- Navigated through Overview, Accounts, Recurring, Activity, Goals, and Decisions.
+- Opened Add account and verified its account, balance, inclusion, Household/person, source-statement, and notes fields.
+- Opened a recurring-item overflow menu and verified Edit and Pause actions.
+- Filtered Activity by the search term “Groceries” and verified the list narrowed to the matching record.
+- Opened the command palette with ⌘K and verified add actions and section navigation.
+- Opened a mobile Add financial goal flow and verified the 390 px page and dialog had no horizontal overflow.
+- Verified the 390 × 844 Overview layout, scrollable tab row, selectors, dominant amount, calculation action, and summary metrics.
+
+**Build and diagnostics**
+
+- Money calculation tests: 4 passed, covering the main operand chain, next income, protected goals, missing income, stale balances, currency exclusion, and month-end recurrence.
+- Workspace typecheck: 16 tasks passed.
+- Workspace production build: 16 tasks passed.
+- Browser runtime/API errors on the verified Money route: none. The browser made one benign request for the repository's existing missing `favicon.ico`; it does not affect the Money module and is classified as P3 repository polish.
+
+**Follow-up polish**
+
+- P3: add a project-level favicon asset in a separate brand pass to remove the existing browser-only 404.
+
+final result: passed
+
+---
+
 # Documents page design QA
 
 **Comparison target**

@@ -10,9 +10,13 @@ function documentFieldValue(
     case "areas":
       return document.areas;
     case "people":
-      return document.people;
+      return document.personIds;
+    case "addedBy":
+      return document.addedBy?.id;
     case "linkState":
-      return document.areas.length > 0 ? "linked" : "unlinked";
+      return document.areas.length > 0 || document.people.length > 0
+        ? "linked"
+        : "unlinked";
     case "tags":
       return document.tags;
     case "kind":
@@ -35,10 +39,6 @@ function documentFieldValue(
       return document.expiresAt;
     case "source":
       return document.source;
-    case "sensitivity":
-      return document.sensitivity;
-    case "offline":
-      return document.availableOffline ? "available" : "cloud-only";
     case "pageCount":
       return document.pageCount;
     case "sizeMb":

@@ -27,6 +27,7 @@ import {
 } from "@lifeos/ui/components/sheet";
 
 import { DocumentFilterBuilder } from "@/features/documents/components/document-filter-builder";
+import type { DocumentFilterOption } from "@/features/documents/filters/document-filter-fields";
 import type { DocumentSort, FilterValue } from "@/features/documents/types";
 
 type DocumentLibraryToolbarProps = {
@@ -34,6 +35,8 @@ type DocumentLibraryToolbarProps = {
   onQueryChange: (value: string) => void;
   filters: Filter<FilterValue>[];
   onFiltersChange: (filters: Filter<FilterValue>[]) => void;
+  people: DocumentFilterOption[];
+  creators: DocumentFilterOption[];
   sort: DocumentSort;
   onSortChange: (sort: DocumentSort) => void;
 };
@@ -50,6 +53,8 @@ export function DocumentLibraryToolbar({
   onQueryChange,
   filters,
   onFiltersChange,
+  people,
+  creators,
   sort,
   onSortChange,
 }: DocumentLibraryToolbarProps) {
@@ -127,6 +132,8 @@ export function DocumentLibraryToolbar({
                 <DocumentFilterBuilder
                   filters={filters}
                   onChange={onFiltersChange}
+                  people={people}
+                  creators={creators}
                   compact
                 />
               </div>
@@ -150,6 +157,8 @@ export function DocumentLibraryToolbar({
           <DocumentFilterBuilder
             filters={filters}
             onChange={onFiltersChange}
+            people={people}
+            creators={creators}
             compact
           />
         </div>

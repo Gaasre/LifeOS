@@ -10,18 +10,6 @@
   }
 }
 
-@keyframes document-card-enter {
-  from {
-    opacity: 0;
-    translate: 0 0.75rem;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
 @keyframes document-compact-enter {
   from {
     opacity: 0;
@@ -38,17 +26,12 @@
   animation: documents-section-enter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.document-card-enter {
-  animation: document-card-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 .document-compact-enter {
   animation: document-compact-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .documents-section-enter,
-  .document-card-enter,
   .document-compact-enter {
     animation: none;
     opacity: 1;

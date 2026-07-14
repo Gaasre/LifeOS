@@ -4,16 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./family-access": "./src/family-access.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
+    "auth:schema": "auth generate --config ./src/server.ts --output ../db/src/auth-schema.ts --yes",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "better-auth": "^1.6.23"
+    "@better-auth/drizzle-adapter": "^1.6.23",
+    "@lifeos/db": "workspace:*",
+    "better-auth": "^1.6.23",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
+    "auth": "^1.6.23",
     "typescript": "^7.0.2"
   }
 }

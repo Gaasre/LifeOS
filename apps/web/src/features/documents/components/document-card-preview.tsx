@@ -6,24 +6,23 @@ import {
   FileTextIcon,
   HeartIcon,
   HomeIcon,
+  ImageIcon,
   PlaneIcon,
-  UserIcon,
-  UsersRoundIcon,
 } from "lucide-react";
 
 import { Badge } from "@lifeos/ui/components/badge";
 
+import { DocumentFilePreview } from "@/features/documents/components/document-file-preview";
 import type { DocumentArea, LifeDocument } from "@/features/documents/types";
 
 const areaIcons: Record<DocumentArea, typeof HomeIcon> = {
-  Me: UserIcon,
-  Family: UsersRoundIcon,
   Home: HomeIcon,
   Money: CircleDollarSignIcon,
   Health: HeartIcon,
   Work: FileTextIcon,
   Travel: PlaneIcon,
   Projects: ArchiveIcon,
+  Memories: ImageIcon,
 };
 
 type DocumentCardPreviewProps = {
@@ -59,13 +58,11 @@ export function DocumentCardPreview({
         onClick={() => onOpen(document)}
         aria-label={`Open ${document.title}`}
       >
-        <img
-          src={document.preview}
+        <DocumentFilePreview
+          document={document}
           alt={`Preview of ${document.title}`}
-          width={1086}
-          height={1448}
-          loading={priority ? "eager" : "lazy"}
-          className="size-full object-cover object-top brightness-[0.82] grayscale-[0.55]"
+          priority={priority}
+          className="size-full brightness-[0.82] grayscale-[0.55]"
         />
         <span
           className="absolute inset-0 bg-black/18 opacity-100 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[opacity] group-hover/document:opacity-0 group-focus-within/document:opacity-0 motion-reduce:transition-none"

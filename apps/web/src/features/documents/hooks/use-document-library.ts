@@ -26,6 +26,7 @@ function matchesQuery(document: LifeDocument, query: string) {
     document.kind,
     document.issuer,
     document.mediaType,
+    document.addedBy?.name ?? "",
     ...document.areas,
     ...document.people,
     ...document.tags,

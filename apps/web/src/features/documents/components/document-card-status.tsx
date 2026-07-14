@@ -1,7 +1,6 @@
 import { CardFooter } from "@lifeos/ui/components/card";
 import { cn } from "@lifeos/ui/lib/utils";
 
-import { DocumentReviewState } from "@/features/documents/components/document-review-state";
 import type { LifeDocument } from "@/features/documents/types";
 
 const attentionTone = {
@@ -15,14 +14,26 @@ type DocumentCardStatusProps = {
 };
 
 export function DocumentCardStatus({ document }: DocumentCardStatusProps) {
+  const relationshipLabel =
+    document.people.length > 0
+      ? `For ${document.people.join(" + ")}`
+      : "For Family";
+  const creatorMatchesSoleRelatedPerson =
+    document.people.length === 1 &&
+    document.addedBy?.name.localeCompare(document.people[0] ?? "", undefined, {
+      sensitivity: "base",
+    }) === 0;
+  const addedLabel =
+    document.addedBy && !creatorMatchesSoleRelatedPerson
+      ? `Added by ${document.addedBy.name}`
+      : `Added ${new Date(document.addedAt).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })}`;
+
   return (
     <CardFooter className="h-11 min-h-11 justify-between gap-3 border-t border-foreground/10 bg-muted/20 px-4 py-0">
-      {document.review ? (
-        <DocumentReviewState
-          review={document.review}
-          className="text-[0.8125rem]"
-        />
-      ) : document.attention ? (
+      {document.attention ? (
         <span
           className={cn(
             "flex min-w-0 items-center gap-2 text-[0.8125rem] font-medium",
@@ -37,15 +48,11 @@ export function DocumentCardStatus({ document }: DocumentCardStatusProps) {
         </span>
       ) : (
         <span className="truncate text-[0.8125rem] text-muted-foreground">
-          Added{" "}
-          {new Date(document.addedAt).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          })}
+          {relationshipLabel}
         </span>
       )}
-      <span className="shrink-0 text-[0.8125rem] text-muted-foreground">
-        {document.availableOffline ? "Offline" : "Cloud"}
+      <span className="truncate text-xs text-muted-foreground">
+        {addedLabel}
       </span>
     </CardFooter>
   );

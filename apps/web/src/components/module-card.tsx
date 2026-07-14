@@ -1,8 +1,28 @@
 import type { ComponentType, SVGProps } from "react";
+import { motion, type Variants } from "motion/react";
 import { Link } from "react-router-dom";
 
 import { Card } from "@lifeos/ui/components/card";
 import { cn } from "@lifeos/ui/lib/utils";
+
+const MotionLink = motion.create(Link);
+
+const moduleCardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.985,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.38,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
 
 type ModuleCardProps = {
   title: string;
@@ -66,18 +86,22 @@ export function ModuleCard({
 
   if (!href) {
     return (
-      <div className="group/module col-span-12 sm:col-span-6 xl:col-span-3">
+      <motion.div
+        className="group/module col-span-12 sm:col-span-6 xl:col-span-3"
+        variants={moduleCardVariants}
+      >
         {card}
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <Link
+    <MotionLink
       to={href}
       className="group/module col-span-12 rounded-lg outline-none sm:col-span-6 xl:col-span-3"
+      variants={moduleCardVariants}
     >
       {card}
-    </Link>
+    </MotionLink>
   );
 }

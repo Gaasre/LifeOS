@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@orpc/client": "^1.14.7",
+    "@orpc/contract": "^1.14.7",
     "@orpc/react": "^1.14.7",
-    "@orpc/server": "^1.14.7"
+    "@orpc/server": "^1.14.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

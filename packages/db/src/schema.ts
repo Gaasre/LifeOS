@@ -1,13 +1,6 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-
-export const entities = pgTable("entities", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  type: text("type").notNull(),
-  title: text("title").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export * from "./auth-schema";
+export * from "./documents-schema";
+export * from "./domain-schema";
+export * from "./fitness-schema";
+export * from "./money-schema";
+export * from "./projects-schema";

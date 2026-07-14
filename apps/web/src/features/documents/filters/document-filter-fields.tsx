@@ -3,18 +3,17 @@ import {
   CalendarClockIcon,
   CalendarPlusIcon,
   CircleAlertIcon,
-  CloudIcon,
   FileImageIcon,
   FileStackIcon,
   FileTextIcon,
   FingerprintIcon,
   FolderTreeIcon,
   HardDriveIcon,
-  KeyRoundIcon,
   Link2Icon,
   ScanTextIcon,
   TagsIcon,
   TextSearchIcon,
+  UserCheckIcon,
   UserRoundIcon,
 } from "lucide-react";
 
@@ -32,7 +31,6 @@ import {
   DOCUMENT_STATUSES,
   type FilterValue,
 } from "@/features/documents/types";
-import { DOCUMENT_PEOPLE } from "@/features/documents/data/documents";
 
 const dateOperators: FilterOperator[] = [
   { value: "is", label: "is" },
@@ -145,45 +143,60 @@ function NumberFilterControl({
   );
 }
 
-const relationshipFields: FilterFieldConfig<FilterValue>[] = [
-  {
-    key: "areas",
-    label: "Life area",
-    type: "multiselect",
-    icon: <FolderTreeIcon />,
-    searchable: true,
-    options: DOCUMENT_AREAS.map((area) => ({ value: area, label: area })),
-  },
-  {
-    key: "people",
-    label: "Person",
-    type: "multiselect",
-    icon: <UserRoundIcon />,
-    searchable: true,
-    options: DOCUMENT_PEOPLE.map((person) => ({
-      value: person,
-      label: person,
-    })),
-  },
-  {
-    key: "linkState",
-    label: "Relationship",
-    type: "select",
-    icon: <Link2Icon />,
-    searchable: false,
-    options: [
-      { value: "linked", label: "Linked" },
-      { value: "unlinked", label: "Unlinked" },
-    ],
-  },
-  {
-    key: "tags",
-    label: "Tags",
-    type: "text",
-    icon: <TagsIcon />,
-    placeholder: "Search tags...",
-  },
-];
+export type DocumentFilterOption = {
+  value: string;
+  label: string;
+};
+
+function relationshipFields(
+  people: DocumentFilterOption[],
+  creators: DocumentFilterOption[],
+): FilterFieldConfig<FilterValue>[] {
+  return [
+    {
+      key: "people",
+      label: "Belongs to",
+      type: "multiselect",
+      icon: <UserRoundIcon />,
+      searchable: true,
+      options: people,
+    },
+    {
+      key: "addedBy",
+      label: "Added by",
+      type: "multiselect",
+      icon: <UserCheckIcon />,
+      searchable: true,
+      options: creators,
+    },
+    {
+      key: "areas",
+      label: "Related module",
+      type: "multiselect",
+      icon: <FolderTreeIcon />,
+      searchable: true,
+      options: DOCUMENT_AREAS.map((area) => ({ value: area, label: area })),
+    },
+    {
+      key: "linkState",
+      label: "Relationship",
+      type: "select",
+      icon: <Link2Icon />,
+      searchable: false,
+      options: [
+        { value: "linked", label: "Linked" },
+        { value: "unlinked", label: "Unlinked" },
+      ],
+    },
+    {
+      key: "tags",
+      label: "Tags",
+      type: "text",
+      icon: <TagsIcon />,
+      placeholder: "Search tags...",
+    },
+  ];
+}
 
 const recordFields: FilterFieldConfig<FilterValue>[] = [
   {
@@ -215,7 +228,6 @@ const recordFields: FilterFieldConfig<FilterValue>[] = [
       { value: "expiry", label: "Expiring" },
       { value: "renewal", label: "Renewal due" },
       { value: "signature", label: "Signature needed" },
-      { value: "review", label: "Needs review" },
       { value: "unlinked", label: "Not linked" },
       { value: "none", label: "No attention needed" },
     ],
@@ -288,28 +300,6 @@ const fileFields: FilterFieldConfig<FilterValue>[] = [
     })),
   },
   {
-    key: "sensitivity",
-    label: "Privacy",
-    type: "multiselect",
-    icon: <KeyRoundIcon />,
-    searchable: false,
-    options: ["Standard", "Private", "Sensitive"].map((value) => ({
-      value,
-      label: value,
-    })),
-  },
-  {
-    key: "offline",
-    label: "Availability",
-    type: "select",
-    icon: <CloudIcon />,
-    searchable: false,
-    options: [
-      { value: "available", label: "Available offline" },
-      { value: "cloud-only", label: "Cloud only" },
-    ],
-  },
-  {
     key: "pageCount",
     label: "Page count",
     type: "custom",
@@ -334,9 +324,14 @@ const fileFields: FilterFieldConfig<FilterValue>[] = [
   },
 ];
 
-export const DOCUMENT_FILTER_FIELDS: FilterFieldGroup<FilterValue>[] = [
-  { group: "Relationships", fields: relationshipFields },
-  { group: "Record", fields: recordFields },
-  { group: "Dates", fields: dateFields },
-  { group: "File", fields: fileFields },
-];
+export function createDocumentFilterFields(
+  people: DocumentFilterOption[],
+  creators: DocumentFilterOption[],
+): FilterFieldGroup<FilterValue>[] {
+  return [
+    { group: "Relationships", fields: relationshipFields(people, creators) },
+    { group: "Record", fields: recordFields },
+    { group: "Dates", fields: dateFields },
+    { group: "File", fields: fileFields },
+  ];
+}

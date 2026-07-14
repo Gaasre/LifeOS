@@ -10,9 +10,20 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.0.8",
+    "@lifeos/access": "workspace:*",
     "@lifeos/auth": "workspace:*",
     "@lifeos/db": "workspace:*",
+    "@lifeos/documents": "workspace:*",
+    "@lifeos/files": "workspace:*",
+    "@lifeos/fitness": "workspace:*",
+    "@lifeos/jobs": "workspace:*",
+    "@lifeos/money": "workspace:*",
+    "@lifeos/projects": "workspace:*",
     "@lifeos/rpc": "workspace:*",
+    "@lifeos/storage": "workspace:*",
+    "@orpc/server": "^1.14.7",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.28"
   },
   "devDependencies": {
