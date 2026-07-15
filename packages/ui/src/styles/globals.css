@@ -53,6 +53,7 @@
   --color-project-accent: var(--project-accent);
   --color-money-accent: var(--money-accent);
   --color-fitness-accent: var(--fitness-accent);
+  --color-family-accent: var(--family-accent);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -108,6 +109,7 @@
   --project-accent: oklch(0.62 0.07 72);
   --money-accent: oklch(0.62 0.07 72);
   --fitness-accent: oklch(0.62 0.065 72);
+  --family-accent: oklch(0.62 0.075 72);
 }
 
 .dark {
@@ -154,6 +156,7 @@
   --project-accent: oklch(0.8 0.075 72);
   --money-accent: oklch(0.82 0.075 72);
   --fitness-accent: oklch(0.82 0.075 72);
+  --family-accent: oklch(0.82 0.08 72);
 }
 
 @layer base {

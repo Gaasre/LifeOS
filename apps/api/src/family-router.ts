@@ -18,11 +18,15 @@ import {
   people,
   personalDates,
   personFacts,
+  projects,
+  projectSteps,
+  recurringMoneyItems,
   user,
 } from "@lifeos/db";
 import {
   lifeOsContract,
   type FamilyDashboard,
+  type FamilyMoment,
   type OfficialRecord,
   type PersonalDate,
   type PersonDashboard,
@@ -572,6 +576,43 @@ const deletePersonalDate = authorized.me.deletePersonalDate.handler(
   },
 );
 
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function shiftDateKey(value: string, days: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function annualOccurrence(value: string, today: string) {
+  const [, month = "01", rawDay = "01"] = value.split("-");
+
+  function inYear(year: number) {
+    const lastDay = new Date(Date.UTC(year, Number(month), 0)).getUTCDate();
+    const day = Math.min(Number(rawDay), lastDay);
+    return `${year}-${month}-${String(day).padStart(2, "0")}`;
+  }
+
+  const year = Number(today.slice(0, 4));
+  const thisYear = inYear(year);
+  return thisYear >= today ? thisYear : inYear(year + 1);
+}
+
+function compareFamilyMoments(left: FamilyMoment, right: FamilyMoment) {
+  if (left.occursOn === right.occursOn) {
+    return left.title.localeCompare(right.title);
+  }
+  if (left.occursOn === null) return -1;
+  if (right.occursOn === null) return 1;
+  return left.occursOn.localeCompare(right.occursOn);
+}
+
 async function buildFamilyDashboard(
   context: AuthorizedContext,
   organizationId?: string,
@@ -589,25 +630,97 @@ async function buildFamilyDashboard(
     return null;
   }
 
-  await ensureLinkedPeople(membership.organization.id);
-  const [personRows, documentRows] = await Promise.all([
+  const familyId = membership.organization.id;
+  await ensureLinkedPeople(familyId);
+
+  const [
+    personRows,
+    documentRows,
+    recordRows,
+    personalDateRows,
+    projectRows,
+    recurringRows,
+  ] = await Promise.all([
     db
       .select()
       .from(people)
-      .where(eq(people.organizationId, membership.organization.id))
+      .where(eq(people.organizationId, familyId))
       .orderBy(people.createdAt),
     db
       .select({
         id: entities.id,
         title: entities.title,
         kind: documents.kind,
+        lifecycle: documents.lifecycle,
         expiresAt: documents.expiresAt,
         addedAt: documents.createdAt,
       })
       .from(documents)
       .innerJoin(entities, eq(documents.entityId, entities.id))
-      .where(eq(entities.organizationId, membership.organization.id))
+      .where(eq(entities.organizationId, familyId))
       .orderBy(desc(documents.createdAt)),
+    db
+      .select({
+        id: officialRecords.id,
+        personId: officialRecords.personId,
+        personName: people.preferredName,
+        recordType: officialRecords.recordType,
+        title: officialRecords.title,
+        expiryDate: officialRecords.expiryDate,
+        status: officialRecords.status,
+        sourceDocumentId: officialRecords.sourceDocumentId,
+      })
+      .from(officialRecords)
+      .innerJoin(people, eq(officialRecords.personId, people.id))
+      .where(eq(people.organizationId, familyId)),
+    db
+      .select({
+        id: personalDates.id,
+        personId: personalDates.personId,
+        personName: people.preferredName,
+        label: personalDates.label,
+        occursOn: personalDates.occursOn,
+        recursAnnually: personalDates.recursAnnually,
+      })
+      .from(personalDates)
+      .innerJoin(people, eq(personalDates.personId, people.id))
+      .where(eq(people.organizationId, familyId)),
+    db
+      .select({
+        id: projects.entityId,
+        title: entities.title,
+        outcome: projects.outcome,
+        coverImage: projects.coverImage,
+        updatedAt: projects.updatedAt,
+      })
+      .from(projects)
+      .innerJoin(entities, eq(projects.entityId, entities.id))
+      .where(
+        and(
+          eq(entities.organizationId, familyId),
+          eq(projects.status, "active"),
+        ),
+      )
+      .orderBy(desc(projects.updatedAt)),
+    db
+      .select({
+        id: recurringMoneyItems.entityId,
+        title: entities.title,
+        amountMinor: recurringMoneyItems.amountMinor,
+        currency: recurringMoneyItems.currency,
+        direction: recurringMoneyItems.direction,
+        group: recurringMoneyItems.group,
+        frequency: recurringMoneyItems.frequency,
+        nextOccurrence: recurringMoneyItems.nextOccurrence,
+      })
+      .from(recurringMoneyItems)
+      .innerJoin(entities, eq(recurringMoneyItems.entityId, entities.id))
+      .where(
+        and(
+          eq(entities.organizationId, familyId),
+          eq(recurringMoneyItems.isActive, true),
+        ),
+      ),
   ]);
 
   const viewerPerson = personRows.find(
@@ -620,45 +733,273 @@ async function buildFamilyDashboard(
   }
 
   const documentIds = documentRows.map((row) => row.id);
-  const [personLinks, moduleLinks] =
-    documentIds.length > 0
-      ? await Promise.all([
-          db
-            .select({
-              entityId: entityPeople.entityId,
-              personName: people.preferredName,
-            })
-            .from(entityPeople)
-            .innerJoin(people, eq(entityPeople.personId, people.id))
-            .where(inArray(entityPeople.entityId, documentIds)),
-          db
-            .select({
-              entityId: entityModules.entityId,
-              module: entityModules.module,
-            })
-            .from(entityModules)
-            .where(inArray(entityModules.entityId, documentIds)),
-        ])
-      : [[], []];
+  const projectIds = projectRows.map((row) => row.id);
+  const recurringIds = recurringRows.map((row) => row.id);
+  const entityIds = [...documentIds, ...projectIds, ...recurringIds];
 
-  const peopleByEntity = new Map<string, string[]>();
+  const [personLinks, moduleLinks, stepRows] = await Promise.all([
+    entityIds.length > 0
+      ? db
+          .select({
+            entityId: entityPeople.entityId,
+            personId: entityPeople.personId,
+          })
+          .from(entityPeople)
+          .where(inArray(entityPeople.entityId, entityIds))
+      : Promise.resolve([] as Array<{ entityId: string; personId: string }>),
+    entityIds.length > 0
+      ? db
+          .select({
+            entityId: entityModules.entityId,
+            module: entityModules.module,
+          })
+          .from(entityModules)
+          .where(inArray(entityModules.entityId, entityIds))
+      : Promise.resolve([] as Array<{ entityId: string; module: string }>),
+    projectIds.length > 0
+      ? db
+          .select({
+            id: projectSteps.id,
+            projectId: projectSteps.projectId,
+            parentStepId: projectSteps.parentStepId,
+            title: projectSteps.title,
+            status: projectSteps.status,
+            position: projectSteps.position,
+            dueDate: projectSteps.dueDate,
+          })
+          .from(projectSteps)
+          .where(inArray(projectSteps.projectId, projectIds))
+          .orderBy(projectSteps.projectId, projectSteps.position)
+      : Promise.resolve(
+          [] as Array<{
+            id: string;
+            projectId: string;
+            parentStepId: string | null;
+            title: string;
+            status: "pending" | "active" | "completed";
+            position: number;
+            dueDate: string | null;
+          }>,
+        ),
+  ]);
+
+  const personIdsByEntity = new Map<string, string[]>();
   const modulesByEntity = new Map<string, string[]>();
+  const stepsByProject = new Map<string, typeof stepRows>();
   for (const link of personLinks) {
-    const names = peopleByEntity.get(link.entityId) ?? [];
-    names.push(link.personName);
-    peopleByEntity.set(link.entityId, names);
+    const linked = personIdsByEntity.get(link.entityId) ?? [];
+    linked.push(link.personId);
+    personIdsByEntity.set(link.entityId, linked);
   }
   for (const link of moduleLinks) {
     if (link.module === "documents") continue;
-    const modules = modulesByEntity.get(link.entityId) ?? [];
-    modules.push(link.module);
-    modulesByEntity.set(link.entityId, modules);
+    const linked = modulesByEntity.get(link.entityId) ?? [];
+    linked.push(link.module);
+    modulesByEntity.set(link.entityId, linked);
+  }
+  for (const step of stepRows) {
+    const linked = stepsByProject.get(step.projectId) ?? [];
+    linked.push(step);
+    stepsByProject.set(step.projectId, linked);
   }
 
-  const today = new Date();
-  const attentionCutoff = new Date(today.getTime() + 90 * 86_400_000)
-    .toISOString()
+  const personSummaries = personRows.map((person) =>
+    mapPersonSummary(person, context.auth.user.id),
+  );
+  const peopleById = new Map(
+    personSummaries.map((person) => [person.id, person]),
+  );
+  const linkedPeople = (entityId: string) =>
+    (personIdsByEntity.get(entityId) ?? [])
+      .map((personId) => peopleById.get(personId))
+      .filter((person): person is PersonSummary => Boolean(person));
+
+  const today = localDateKey();
+  const upcomingCutoff = shiftDateKey(today, 13);
+  const nearTermCutoff = shiftDateKey(today, 3);
+  const attentionCutoff = shiftDateKey(today, 90);
+  const moments: FamilyMoment[] = [];
+  const recordSourceDocumentIds = new Set(
+    recordRows
+      .map((record) => record.sourceDocumentId)
+      .filter((id): id is string => id !== null),
+  );
+
+  for (const record of recordRows) {
+    const needsAttention =
+      record.status !== "current" ||
+      (record.expiryDate !== null && record.expiryDate <= attentionCutoff);
+    if (!needsAttention) continue;
+
+    moments.push({
+      id: `official-record:${record.id}`,
+      kind: "official_record",
+      title: record.title,
+      detail:
+        record.status === "needs_review"
+          ? "Needs review"
+          : record.status === "expired"
+            ? "Expired"
+            : record.recordType,
+      occursOn: record.expiryDate,
+      tone: "attention",
+      personIds: [record.personId],
+      people: [record.personName],
+      destination: "me",
+      targetId: record.personId,
+      amountMinor: null,
+      currency: null,
+    });
+  }
+
+  for (const document of documentRows) {
+    if (
+      document.expiresAt === null ||
+      document.lifecycle !== "active" ||
+      document.expiresAt > attentionCutoff ||
+      recordSourceDocumentIds.has(document.id)
+    ) {
+      continue;
+    }
+    const linked = linkedPeople(document.id);
+    moments.push({
+      id: `document:${document.id}`,
+      kind: "document",
+      title: document.title,
+      detail: document.kind,
+      occursOn: document.expiresAt,
+      tone: "attention",
+      personIds: linked.map((person) => person.id),
+      people: linked.map((person) => person.preferredName),
+      destination: "documents",
+      targetId: document.id,
+      amountMinor: null,
+      currency: null,
+    });
+  }
+
+  for (const person of personRows) {
+    if (!person.birthday) continue;
+    moments.push({
+      id: `birthday:${person.id}`,
+      kind: "birthday",
+      title: `${person.preferredName}’s birthday`,
+      detail: "Birthday",
+      occursOn: annualOccurrence(person.birthday, today),
+      tone: "upcoming",
+      personIds: [person.id],
+      people: [person.preferredName],
+      destination: "me",
+      targetId: person.id,
+      amountMinor: null,
+      currency: null,
+    });
+  }
+
+  for (const date of personalDateRows) {
+    const occursOn = date.recursAnnually
+      ? annualOccurrence(date.occursOn, today)
+      : date.occursOn;
+    if (occursOn < today) continue;
+    moments.push({
+      id: `personal-date:${date.id}`,
+      kind: "personal_date",
+      title: date.label,
+      detail: date.personName,
+      occursOn,
+      tone: "upcoming",
+      personIds: [date.personId],
+      people: [date.personName],
+      destination: "me",
+      targetId: date.personId,
+      amountMinor: null,
+      currency: null,
+    });
+  }
+
+  const sharedProjects = projectRows.slice(0, 6).map((project) => {
+    const topLevelSteps = (stepsByProject.get(project.id) ?? []).filter(
+      (step) => step.parentStepId === null,
+    );
+    const nextStep =
+      topLevelSteps.find((step) => step.status === "active") ??
+      topLevelSteps.find((step) => step.status === "pending") ??
+      null;
+    const linked = linkedPeople(project.id);
+
+    if (nextStep?.dueDate) {
+      moments.push({
+        id: `project:${nextStep.id}`,
+        kind: "project",
+        title: nextStep.title,
+        detail: project.title,
+        occursOn: nextStep.dueDate,
+        tone: nextStep.dueDate <= nearTermCutoff ? "attention" : "upcoming",
+        personIds: linked.map((person) => person.id),
+        people: linked.map((person) => person.preferredName),
+        destination: "projects",
+        targetId: project.id,
+        amountMinor: null,
+        currency: null,
+      });
+    }
+
+    return {
+      id: project.id,
+      title: project.title,
+      outcome: project.outcome,
+      coverImage: project.coverImage,
+      people: linked,
+      modules: modulesByEntity.get(project.id) ?? [],
+      nextStep: nextStep
+        ? {
+            id: nextStep.id,
+            title: nextStep.title,
+            dueDate: nextStep.dueDate,
+          }
+        : null,
+      completedSteps: topLevelSteps.filter(
+        (step) => step.status === "completed",
+      ).length,
+      totalSteps: topLevelSteps.length,
+    };
+  });
+
+  for (const recurring of recurringRows) {
+    const linked = linkedPeople(recurring.id);
+    moments.push({
+      id: `money:${recurring.id}`,
+      kind: "money",
+      title: recurring.title,
+      detail: `${recurring.group} · ${recurring.frequency}`,
+      occursOn: recurring.nextOccurrence,
+      tone:
+        recurring.direction === "expense" &&
+        recurring.nextOccurrence <= nearTermCutoff
+          ? "attention"
+          : "upcoming",
+      personIds: linked.map((person) => person.id),
+      people: linked.map((person) => person.preferredName),
+      destination: "money",
+      targetId: recurring.id,
+      amountMinor: recurring.amountMinor,
+      currency: recurring.currency,
+    });
+  }
+
+  const attention = moments
+    .filter((moment) => moment.tone === "attention")
+    .sort(compareFamilyMoments)
     .slice(0, 10);
+  const upcoming = moments
+    .filter(
+      (moment) =>
+        moment.occursOn !== null &&
+        moment.occursOn >= today &&
+        moment.occursOn <= upcomingCutoff,
+    )
+    .sort(compareFamilyMoments)
+    .slice(0, 18);
 
   return {
     family: {
@@ -672,25 +1013,28 @@ async function buildFamilyDashboard(
       userId: context.auth.user.id,
       personId: viewerPerson.id,
     },
-    people: personRows.map((person) =>
-      mapPersonSummary(person, context.auth.user.id),
-    ),
-    recentDocuments: documentRows.slice(0, 8).map((document) => ({
-      id: document.id,
-      title: document.title,
-      kind: document.kind,
-      people: peopleByEntity.get(document.id) ?? [],
-      modules: modulesByEntity.get(document.id) ?? [],
-      expiresAt: document.expiresAt,
-      addedAt: document.addedAt.toISOString(),
-    })),
+    today,
+    people: personSummaries,
+    recentDocuments: documentRows.slice(0, 8).map((document) => {
+      const linked = linkedPeople(document.id);
+      return {
+        id: document.id,
+        title: document.title,
+        kind: document.kind,
+        people: linked.map((person) => person.preferredName),
+        modules: modulesByEntity.get(document.id) ?? [],
+        expiresAt: document.expiresAt,
+        addedAt: document.addedAt.toISOString(),
+      };
+    }),
+    attention,
+    upcoming,
+    sharedProjects,
     summary: {
       people: personRows.length,
       documents: documentRows.length,
-      needsAttention: documentRows.filter(
-        (document) =>
-          document.expiresAt !== null && document.expiresAt <= attentionCutoff,
-      ).length,
+      needsAttention: attention.length,
+      sharedProjects: sharedProjects.length,
     },
   };
 }

@@ -93,34 +93,39 @@ export function CreateFamilyDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create your Family</DialogTitle>
-          <DialogDescription>
-            This creates one household for your people and data. Personal and
-            Family spaces are views over that same information.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="family-name">Family name</FieldLabel>
-              <Input
-                id="family-name"
-                value={name}
-                maxLength={80}
-                autoFocus
-                placeholder="Our family"
-                onChange={(event) => setName(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-              <FieldDescription>
-                You can keep this simple; it is only household context.
-              </FieldDescription>
-              <FieldError>{error}</FieldError>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden p-0 sm:max-w-md">
+        <form
+          className="grid max-h-[calc(100vh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={handleSubmit}
+        >
+          <DialogHeader className="px-4 pt-4 pr-12 pb-4">
+            <DialogTitle>Create your Family</DialogTitle>
+            <DialogDescription>
+              This creates one household for your people and data. Personal and
+              Family spaces are views over that same information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-4 pb-4">
+            <FieldGroup>
+              <Field data-invalid={Boolean(error)}>
+                <FieldLabel htmlFor="family-name">Family name</FieldLabel>
+                <Input
+                  id="family-name"
+                  value={name}
+                  maxLength={80}
+                  autoFocus
+                  placeholder="Our family"
+                  onChange={(event) => setName(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                />
+                <FieldDescription>
+                  You can keep this simple; it is only household context.
+                </FieldDescription>
+                <FieldError>{error}</FieldError>
+              </Field>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="m-0">
             <Button type="submit" disabled={!name.trim() || isSaving}>
               {isSaving ? <Spinner data-icon="inline-start" /> : null}
               {isSaving ? "Creating…" : "Create Family"}
@@ -135,14 +140,26 @@ export function CreateFamilyDialog({
 export function InviteFamilyDialog({
   organizationId,
   disabled,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   organizationId: string;
   disabled?: boolean;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+
+  function setOpen(nextOpen: boolean) {
+    if (controlledOpen === undefined) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  }
 
   async function handleInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -174,42 +191,53 @@ export function InviteFamilyDialog({
     }
   }
 
+  const resolvedTrigger =
+    trigger ??
+    (controlledOpen === undefined ? (
+      <Button type="button" disabled={disabled}>
+        <MailPlusIcon data-icon="inline-start" />
+        Invite partner
+      </Button>
+    ) : null);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" disabled={disabled}>
-          <MailPlusIcon data-icon="inline-start" />
-          Invite partner
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite your partner</DialogTitle>
-          <DialogDescription>
-            This is a one-time household invitation. After joining, both of you
-            can open and manage the same information.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={handleInvite}>
-          <FieldGroup>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="invite-email">Email address</FieldLabel>
-              <Input
-                id="invite-email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                placeholder="partner@example.com"
-                onChange={(event) => setEmail(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-              <FieldDescription>
-                They can accept from the LifeOS invitations page.
-              </FieldDescription>
-              <FieldError>{error}</FieldError>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
+      {resolvedTrigger ? (
+        <DialogTrigger asChild>{resolvedTrigger}</DialogTrigger>
+      ) : null}
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden p-0 sm:max-w-md">
+        <form
+          className="grid max-h-[calc(100vh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={handleInvite}
+        >
+          <DialogHeader className="px-4 pt-4 pr-12 pb-4">
+            <DialogTitle>Invite your partner</DialogTitle>
+            <DialogDescription>
+              This is a one-time household invitation. After joining, both of
+              you can open and manage the same information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-4 pb-4">
+            <FieldGroup>
+              <Field data-invalid={Boolean(error)}>
+                <FieldLabel htmlFor="invite-email">Email address</FieldLabel>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  placeholder="partner@example.com"
+                  onChange={(event) => setEmail(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                />
+                <FieldDescription>
+                  They can accept from the LifeOS invitations page.
+                </FieldDescription>
+                <FieldError>{error}</FieldError>
+              </Field>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="m-0">
             <Button type="submit" disabled={!email.trim() || isSending}>
               {isSending ? (
                 <Spinner data-icon="inline-start" />

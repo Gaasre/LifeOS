@@ -1,3 +1,66 @@
+# Me module quiet-profile redesign QA
+
+**Comparison target**
+
+- Source visual truth: `docs/design-qa/me-simple-option-1-reference.png`, copied from the first displayed ImageGen direction selected by the user.
+- Browser-rendered implementation: `docs/design-qa/me-simple-option-1-desktop-final.png`.
+- Responsive implementation: `docs/design-qa/me-simple-option-1-mobile-final.png` and `docs/design-qa/me-simple-option-1-mobile-lower-pass-1.png`.
+- Route: `http://127.0.0.1:5173/me`.
+- Viewports: 1440 × 1024 desktop and 390 × 844 mobile.
+- State: authenticated dark-theme Overview for Amine Barchid using the account's real profile, fact, and upcoming-date data.
+
+**Full-view comparison evidence**
+
+The selected mock and the final browser-rendered implementation were normalized to the same 1440 × 1024 viewport and placed together in `docs/design-qa/me-simple-option-1-comparison-final.png`. The implementation preserves the source's compact AppHeader and tabs, one integrated profile surface, modest identity header, open two-column reading flow, restrained champagne accent, minimal separators, single upcoming-date rail, and fixed bottom-right Actions launcher.
+
+**Focused region comparison evidence**
+
+`docs/design-qa/me-simple-option-1-focused-comparison-final.png` compares the profile surface at a matched card crop. It confirms the selected hierarchy, avatar/name relationship, generated horizon artwork, two balanced data columns, row density, border treatment, and compact Next up rail at readable scale.
+
+**Findings**
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the implementation uses LifeOS's existing Roboto Slab variable heading face and Outfit variable UI face. The name remains the only large display treatment; section headings, labels, values, and muted support copy maintain the selected hierarchy without oversized titles or duplicate metadata.
+- Spacing and layout rhythm: the 1440 px frame uses 32 px page gutters, a 16 px card radius, a 224 px integrated profile header, balanced 50/50 detail columns, 56 px reference rows, and a 112 px upcoming-date rail. The card and major anchors closely track the selected mock. At 390 px, the sections stack naturally and the document has no horizontal overflow (`clientWidth: 390`, `scrollWidth: 390`).
+- Colors and visual tokens: shared LifeOS background, card, border, foreground, muted, and money-accent tokens are preserved. The warm accent is restricted to the monogram, edit icon, missing-value actions, horizon art, date icon, and active details.
+- Image quality and asset fidelity: `apps/web/public/images/me/profile-horizon-v1.jpg` is a purpose-built 1600 × 533 raster generated from the selected mock's decorative motif. It is placed at its natural 3:1 aspect ratio with automatic width and full slot height, so it is neither stretched nor squashed. The subject, crop, low contrast, and negative space match the selected art direction; no CSS illustration or placeholder asset substitutes for it.
+- Copy and content: visible profile copy matches the selected direction and uses real profile values. Empty quick-reference fields remain direct `Add` actions rather than invented personal data. The duplicated completion counts, record totals, and decorative object categories from the previous design are absent.
+- Icons and controls: the repository's Lucide family matches the source's fine outline treatment. Edit profile, each quick-reference value, Add date, all four tabs, and the fixed Actions command are real accessible controls.
+- Accessibility and responsiveness: the page keeps semantic tabs, headings, definition terms/values, time elements, named buttons, decorative-image empty alt text, visible focus treatments, and keyboard-reachable dialogs. Mobile tabs use concise labels instead of scrolling or clipping.
+
+**Comparison history**
+
+- First-pass P2 — the initial implementation sat about 9 px lower than the mock, used slightly narrow page gutters, undersized the avatar, placed the horizon art too far right, and made the Next up rail too shallow.
+  - Fix: aligned the shell to 32 px desktop gutters and 24 px vertical padding, reduced the overview gap, increased the avatar to 128 px, refined the display-name scale/weight, shifted and softened the raster motif, and set the upcoming rail to a 112 px minimum height.
+  - Post-fix evidence: `docs/design-qa/me-simple-option-1-desktop-pass-1.png`, `docs/design-qa/me-simple-option-1-desktop-final.png`, and `docs/design-qa/me-simple-option-1-comparison-final.png`.
+- Responsive P2 — the full `IDs & records` mobile tab label truncated by a few characters even though the tab row no longer scrolled.
+  - Fix: retained the full desktop labels while using the explicit mobile labels `Overview`, `IDs`, `Facts`, and `Dates` inside the same four fixed tracks.
+  - Post-fix evidence: `docs/design-qa/me-simple-option-1-mobile-pass-1.png` and `docs/design-qa/me-simple-option-1-mobile-final.png`.
+
+**Primary interactions tested**
+
+- Switched from Overview to Useful facts and back, verifying selected-tab state and content changes.
+- Opened and closed Edit profile and verified the real populated profile form.
+- Opened and closed the Ring size quick-add dialog and verified its labeled empty field and disabled submit state.
+- Opened and closed Add date and verified its name, date, recurrence, and disabled submit controls.
+- Opened and closed the fixed Actions palette through both the floating button and the ⌘K keyboard shortcut.
+- Verified the 390 px page has no horizontal overflow and that all four mobile tab destinations remain fully visible without an internally scrollable tab strip.
+
+**Build and diagnostics**
+
+- Web typecheck: passed.
+- Web production build: passed.
+- Prettier check for `me-page.tsx`: passed.
+- Browser console errors after the final desktop reload: none.
+
+**Follow-up polish**
+
+- P3: the browser-rendered Roboto Slab variable weight is slightly firmer than the conceptual ImageGen lettering at close inspection. The established LifeOS font was intentionally preserved rather than introducing a one-page typeface.
+
+final result: passed
+
+---
+
 # Authentication flow design QA
 
 **Comparison target**
@@ -57,6 +120,121 @@ The approved direction and final browser capture were placed together in `docs/d
 **Follow-up polish**
 
 - The generated portrait has minor contour differences from the conceptual mock at close inspection; this is acceptable P3 drift and remains faithful to the original LifeOS “Me” art direction.
+
+final result: passed
+
+---
+
+# Me module editorial-wallet design QA
+
+**Comparison target**
+
+- Source visual truth: `docs/design-qa/me-editorial-approved.png`.
+- User-reported oversized implementation: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-9290338d-fb68-4627-9dfe-94f4f2682e89.png`.
+- User-reported oversized Useful facts cards: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-30794be5-1f60-42e2-b329-020a9dba874b.png`.
+- User-reported internally scrollable and clipped tab navigation: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-c1870a8d-65a0-4dfb-852a-2e47da2a670c.png`.
+- User-reported flattened Fit and Travel shelf artwork: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-231f8e73-16e8-4582-97fe-39482f6f3cb7.png`.
+- User-reported disconnected three-column Overview: `/var/folders/2m/j9gy8bn938z6djx1scs6lzfh0000gn/T/codex-clipboard-c33c0d44-c8c1-4fe9-8c86-f0d26312ad8f.png`.
+- Latest browser-rendered implementation: `docs/design-qa/me-sizing-fix-final.png`.
+- Latest Useful facts implementation: `docs/design-qa/me-useful-facts-sizing-final.png` and `docs/design-qa/me-useful-facts-focused-final.png`.
+- Latest tab-navigation implementation: `docs/design-qa/me-tabs-final.png`, `docs/design-qa/me-tabs-focused-final.png`, and `docs/design-qa/me-tabs-mobile-final.png`.
+- Latest shelf-proportion implementation: `docs/design-qa/me-shelf-proportions-final.png` and `docs/design-qa/me-shelf-proportions-focused-final.png`.
+- Latest connected Overview implementation: `docs/design-qa/me-overview-cohesion-final.png`, `docs/design-qa/me-overview-cohesion-desktop-final.png`, and `docs/design-qa/me-overview-cohesion-focused-final.png`.
+- Responsive implementation: `docs/design-qa/me-editorial-mobile-final.png` and `docs/design-qa/me-useful-facts-mobile-final.png`.
+- Same-input comparisons: `docs/design-qa/me-editorial-comparison-final.png`, `docs/design-qa/me-sizing-comparison-final.png`, `docs/design-qa/me-useful-facts-comparison-final.png`, `docs/design-qa/me-tabs-comparison-final.png`, `docs/design-qa/me-shelf-proportions-comparison-final.png`, and `docs/design-qa/me-overview-cohesion-comparison-final.png`.
+- Route: `http://127.0.0.1:5173/me`.
+- Latest verified viewports: 1280 × 900 for the wide connected composition, 808 × 897 for the live in-app layout, and 390 × 844 for the responsive layout. The 1280 px page has no horizontal overflow and the Overview surface is exactly 960 px wide; at 808 px it is 760 px wide; at 390 px it is 358 px wide.
+- State: authenticated dark-theme Overview and Useful facts views for Amine Barchid with the account's real empty optional fields. The approved mock contains illustrative populated values, while the implementation intentionally does not invent personal data.
+
+**Full-view comparison evidence**
+
+The approved source and original browser capture are stacked at their original 1487 × 1058 dimensions in `docs/design-qa/me-editorial-comparison-final.png`. The user-reported oversized Overview frame and corrected implementation are placed together in `docs/design-qa/me-sizing-comparison-final.png`. The oversized and corrected Useful facts groups are placed together in `docs/design-qa/me-useful-facts-comparison-final.png`. The disconnected triptych and connected Overview are placed together in `docs/design-qa/me-overview-cohesion-comparison-final.png`. The corrected page preserves the editorial-wallet direction while materially reducing the hero, name, folio, shelf, card, image-header, and column scale. Shared AppHeader padding remains consistent with the rest of LifeOS, and the fixed bottom-right Actions launcher remains visible.
+
+**Focused region comparison evidence**
+
+`docs/design-qa/me-overview-cohesion-focused-final.png` isolates the connected Overview. It confirms one bounded surface, a balanced 320 px Identity column beside a 448 px reference column, a shared compact label hierarchy, rounded shelf edges, and a full-width Next up continuation. `docs/design-qa/me-shelf-proportions-comparison-final.png` places the user-reported shelf artwork and corrected implementation together at a matched 524 × 305 region scale. The corrected side replaces the flattened shoe with a fuller, naturally proportioned low-top and the horizontal case with an upright cabin carry-on while preserving the shelf composition and UI rail. `docs/design-qa/me-tabs-comparison-final.png` places the user-reported clipped navigation and the corrected navigation side by side at the same 1048 × 184 input size. `docs/design-qa/me-tabs-focused-final.png` confirms that all four destinations remain fully visible, vertically centered, and bounded by the page divider with the active indicator inside the 48 px row. `docs/design-qa/me-useful-facts-focused-final.png` isolates the corrected category cards at readable scale. It confirms the 352 px card caps, 94 px exact-ratio image strips, natural unequal card heights, left-aligned 16 px group titles, compact descriptions, quick-add wrapping, and fixed Actions clearance. The production hero, folio, Fit shelf, Travel shelf, and Food & language still-life were additionally inspected at native resolution before placement to verify subject accuracy, clean crops, and the absence of generated text or logos.
+
+**Findings**
+
+- No actionable P0, P1, or P2 findings remain.
+- Fonts and typography: the implementation uses LifeOS's existing Roboto Slab display face and Outfit body/UI face. The name remains the sole hero headline; field labels use compact tracked caps; values, empty-state copy, and controls maintain readable optical hierarchy without repeating record counts or profile-completion metrics.
+- Spacing and layout rhythm: the desktop shell is capped at 80 rem, the connected Overview at 60 rem, the hero at 320 px high, the display name at 56 px, the folio at 320 × 256 px, and the wide shelf panels at 448 × 119 px. The former 76 rem three-rail grid and full-height separators are gone. Identity and Everyday reference now occupy a centered 320/448 px pair within one 960 px surface, while Next up continues across the bottom in the same surface; its item grid uses auto-fit tracks so one date does not leave two empty columns. At 808 px, the top tracks resolve to 320/378 px and remain balanced. Useful facts groups are capped at 352 px wide, use 94 px image strips, and size to their content instead of stretching to a shared 339 px height. The page has no horizontal overflow (`scrollWidth: 1280`, `innerWidth: 1280`). The tab list and its shell share an exact 48 px height with no internal scroll range. At 390 px, the Overview becomes a single 358 px bounded surface, all four tabs fit the content width, and the document remains exactly 390 px wide.
+- Colors and visual tokens: near-black LifeOS background/card/border/foreground tokens are preserved. The existing restrained warm accent token is limited to section labels, seals, active details, and focus points; there is no decorative rainbow card coloring or new module palette.
+- Image quality and asset fidelity: all visible editorial artwork was generated specifically for its measured slot. The hero has a true 45% negative-space region; the folio contains blank inset areas for real UI text; Fit, Travel, and Food & language objects match their semantic categories. The Fit v4 artwork uses a fuller low-top sneaker with realistic heel, toe, upper, and sole proportions; the Travel v4 artwork uses a compact upright cabin spinner instead of a flattened horizontal case. Both final files are exact 1200 × 320, 3.75:1 compositions and render at 448 × 119.46 with `object-fit: cover`, so the file and layout ratios match without non-uniform scaling. No existing module photography, emoji, placeholder imagery, custom SVG art, or CSS illustration is reused as a substitute.
+- Copy and content: the hero has one short purpose line instead of duplicate profile metadata. The folio and shelf values are connected to real profile/fact data and show compact Add affordances when absent. The repeated “Pick only the details…” filler was removed from every empty Useful facts group because each group description and Quick add label already explain the action. Next up uses real birthdays, record expiries, and personal dates, with a purposeful empty state when none exist.
+- Icons and controls: Lucide icons match the existing LifeOS stroke family. Edit profile, edit identity, each shelf value, add date, tab navigation, and the floating Actions launcher are real controls with visible focus treatment and accessible names.
+- Accessibility and responsiveness: the page keeps semantic headings, tabs, terms/definitions, time elements, named buttons, decorative-image empty alt text, dialog labels, and keyboard focus states. The 390 px capture shows stable wrapping and no overlap in the hero or folio.
+
+**Comparison history**
+
+- User-reported P1 — the Overview used three page-level headings, two full-height separators, and three columns with incompatible content densities. Identity and the shelves were visually dense while a single upcoming date floated in a mostly empty third rail, making the page read as three unrelated mini-pages.
+  - Fix: replaced the triptych with one 60 rem bounded surface; balanced Identity and Everyday reference as a centered visual pair; reduced their labels to a shared compact hierarchy; rounded the shelf edges; and moved Next up into a full-width continuation below them. Existing data, dialogs, images, and actions were preserved.
+  - Post-fix evidence: `docs/design-qa/me-overview-cohesion-final.png`, `docs/design-qa/me-overview-cohesion-desktop-final.png`, and `docs/design-qa/me-overview-cohesion-comparison-final.png`.
+- Cohesion pass P2 — at the live 808 px width, shrinking the reference column to 378 px caused the third shelf value to clip because the original value rail still used the wide-state type size and 26% width.
+  - Fix: widened the intermediate value rail to 31%, reduced its row padding and type size below the large breakpoint, and restored the 26%/14 px treatment at wide sizes. All three values now remain visible at 808 px and the compact mobile layout continues to separate the values below each image.
+  - Post-fix evidence: `docs/design-qa/me-overview-cohesion-pass-2.png` and `docs/design-qa/me-overview-cohesion-final.png`.
+- User-reported P1 — the earlier generated Fit and Travel objects were visibly flattened even though the CSS and file ratios matched: the shoe had an unnaturally low upper and the suitcase read as a stretched horizontal case.
+  - Fix: generated new slot-specific v4 rasters with a naturally proportioned low-top shoe and upright carry-on, then cropped each source through an exact 2025 × 540 (3.75:1) window and exported at 1200 × 320. The component continues to preserve the same aspect ratio, layout, overlay, and theme.
+  - Post-fix evidence: `docs/design-qa/me-shelf-proportions-focused-final.png` and `docs/design-qa/me-shelf-proportions-comparison-final.png`.
+- User-reported P1 — the tab wrapper used `overflow-x-auto`, which also computed vertical overflow to `auto`; the shared shadcn list stayed 32 px high while its triggers were forced to 48 px. This created a 12 px internal vertical scroll range and let the navigation drift upward until its labels were clipped.
+  - Fix: removed the overflow container, explicitly set the horizontal tab list to the same 48 px height as its triggers, moved the active indicator inside that bound, and made the four destinations flex to the available mobile width instead of relying on a loose scroll strip.
+  - Post-fix evidence: `docs/design-qa/me-tabs-final.png`, `docs/design-qa/me-tabs-mobile-final.png`, and `docs/design-qa/me-tabs-comparison-final.png`.
+- User-reported P1 — the Useful facts grid stretched three category cards across the full content width, enlarged each image header to 160 px, forced the groups to equal height, and repeated filler copy in every empty card.
+  - Fix: capped the grid at three 352 px tracks, switched to small content-sized shadcn cards, separated the exact-ratio 94 px image strip from the title/content hierarchy, removed equal-height stretching and duplicate filler, and generated a matching 1200 × 320 Food & language asset.
+  - Post-fix evidence: `docs/design-qa/me-useful-facts-sizing-final.png`, `docs/design-qa/me-useful-facts-mobile-final.png`, and `docs/design-qa/me-useful-facts-comparison-final.png`.
+- User-reported P1 — the 92 rem shell allowed the hero and three-zone composition to scale like a billboard on a wide/retina canvas, and the original 7.5:1 shelf panoramas were being cropped into 3.75:1 slots at roughly double visual scale.
+  - Fix: capped the shell and Overview widths, set explicit compact hero/type/folio/shelf bounds, generated new 3.75:1 shelf still lifes with smaller subjects and intentional negative space, and preserved their exact aspect ratio at desktop and mobile sizes.
+  - Post-fix evidence: `docs/design-qa/me-sizing-fix-final.png` and `docs/design-qa/me-sizing-comparison-final.png`.
+- Earlier P1 — the first production hero placed the instant photograph too far left, causing the image to compete with the name, and the initial headline scale was larger than the approved hierarchy.
+  - Fix: generated a revised purpose-built 2205 × 713 hero with uninterrupted leather on the left 45%, reduced hero height and display scale, and tightened the content inset.
+  - Post-fix evidence: `docs/design-qa/me-editorial-desktop-final.png` and `docs/design-qa/me-editorial-comparison-final.png`.
+- Earlier P2 — the first shelf-value overlay began too far left and crossed into the fabric object area.
+  - Fix: narrowed and right-aligned the desktop value rail; on sub-640 px layouts, values now become a dedicated row below the image.
+  - Post-fix evidence: `docs/design-qa/me-editorial-desktop-final.png` and `docs/design-qa/me-editorial-mobile-final.png`.
+- Earlier P2 — the Food & language group briefly reused the hero artwork, which did not semantically identify that category.
+  - Fix: generated a dedicated bowl, cutlery, phrasebook, and fountain-pen still life and wired it only to that group.
+  - Post-fix evidence: direct browser inspection of the final Useful facts tab with the dedicated asset.
+
+**Primary interactions tested**
+
+- Opened and closed the fixed floating Actions command palette.
+- Verified the command palette exposes Edit profile, Add record/fact/date, and all four tab destinations.
+- Opened the Shoe size quick-add dialog from the Fit shelf and confirmed its bounded header, scrolling body region, fixed action footer, placeholder, and disabled empty submit state.
+- Opened and closed the Height quick-add dialog from the corrected Useful facts card and verified its labeled field and disabled empty submit state.
+- Switched to Useful facts, verified all grouped quick-add controls and purpose-specific imagery, then returned to Overview.
+- Verified both v4 shelf images report 1200 × 320 intrinsic dimensions and render at 448 × 119.46 with `object-fit: cover`, preserving the same 3.75:1 ratio end to end.
+- Opened and closed Add personal date from the relocated Next up strip and verified its bounded dialog still exposes the name, date, annual-repeat, disabled empty submit, and close controls.
+- Verified the connected Overview resolves to 320/448 px visual columns at 1280 px and 320/378 px columns at 808 px, with a full-width auto-fit Next up item rail.
+- Rendered the connected surface at 390 × 844 and verified its 358 px width, stacked visual flow, readable separated shelf values, and zero horizontal document overflow.
+- Verified the tab shell has no horizontal or vertical scroll range at 1280 × 720 and 390 × 844, and that an attempted retained scroll offset remains zero.
+- Pressed Arrow Right from Overview and verified keyboard focus and selection moved to IDs & records.
+- Verified the real-data empty Next up state and its Add important date actions.
+- Rendered the authenticated page at 390 × 844 and verified the stacked composition, two-line name treatment, fitted tabs, folio, and fixed Actions control.
+
+**Build and diagnostics**
+
+- Web typecheck: passed.
+- Web production build: passed.
+- Prettier check for `me-page.tsx`: passed.
+- Browser console warnings/errors on the latest verified desktop state: none.
+
+**Implementation checklist**
+
+- [x] Remove duplicate counts, completion meters, and repeated hero metadata.
+- [x] Replace generic/reused photography with measured, purpose-built raster assets.
+- [x] Keep Fit and Travel objects naturally proportioned inside exact-ratio shelf artwork.
+- [x] Integrate identity, fit, travel, and dates into one scannable visual Overview.
+- [x] Replace the disconnected three-rail triptych with one balanced, bounded Overview surface.
+- [x] Cap Useful facts cards and use exact-ratio slot-specific artwork without equal-height stretching.
+- [x] Preserve real data, edit dialogs, tabs, and empty states.
+- [x] Keep the four module tabs fitted, vertically bounded, keyboard-operable, and free of internal scrolling.
+- [x] Keep the shared perspective selector only in AppHeader.
+- [x] Add the standard fixed Actions launcher and keyboard shortcut.
+- [x] Verify desktop, responsive, interactions, console, typecheck, and production build.
+
+**Follow-up polish**
+
+- P3: the approved mock shows illustrative populated dates and preferences, while the real account is intentionally empty. Once the user adds values, the same layout will gain the denser timeline and reference rhythm shown in the source without any code change.
 
 final result: passed
 

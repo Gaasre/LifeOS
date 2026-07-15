@@ -62,6 +62,27 @@ import { rpcClient } from "@/lib/rpc-client";
 const noSourceDocument = "__none__";
 const otherRecordType = "__other__";
 
+type DialogControlProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+};
+
+function useDialogControl(
+  controlledOpen?: boolean,
+  onControlledOpenChange?: (open: boolean) => void,
+) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+
+  function setOpen(nextOpen: boolean) {
+    if (controlledOpen === undefined) setInternalOpen(nextOpen);
+    onControlledOpenChange?.(nextOpen);
+  }
+
+  return [open, setOpen] as const;
+}
+
 function nullableText(value: string) {
   return value.trim() || null;
 }
@@ -90,12 +111,15 @@ export function PersonProfileDialog({
   profile,
   onChanged,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   profile: PersonProfile;
   onChanged: () => void | Promise<void>;
   trigger?: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+} & DialogControlProps) {
+  const [open, setOpen] = useDialogControl(controlledOpen, onOpenChange);
   const [preferredName, setPreferredName] = useState(profile.preferredName);
   const [legalName, setLegalName] = useState(profile.legalName ?? "");
   const [birthday, setBirthday] = useState(profile.birthday ?? "");
@@ -160,126 +184,135 @@ export function PersonProfileDialog({
         if (nextOpen) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button type="button" variant="outline" size="sm">
-            <PencilIcon data-icon="inline-start" />
-            Edit overview
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit personal overview</DialogTitle>
-          <DialogDescription>
-            Keep the identity details most often needed for forms and official
-            processes in one clear summary.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={submit}>
-          <FieldGroup className="grid gap-5 sm:grid-cols-2">
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="person-legal-name">
-                Full legal name
-              </FieldLabel>
-              <Input
-                id="person-legal-name"
-                value={legalName}
-                maxLength={140}
-                onChange={(event) => setLegalName(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-preferred-name">
-                Preferred name
-              </FieldLabel>
-              <Input
-                id="person-preferred-name"
-                value={preferredName}
-                maxLength={100}
-                onChange={(event) => setPreferredName(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-birthday">Date of birth</FieldLabel>
-              <Input
-                id="person-birthday"
-                type="date"
-                value={birthday}
-                onChange={(event) => setBirthday(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-birth-place">
-                Place of birth
-              </FieldLabel>
-              <Input
-                id="person-birth-place"
-                value={placeOfBirth}
-                maxLength={140}
-                onChange={(event) => setPlaceOfBirth(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-nationality">Nationality</FieldLabel>
-              <Input
-                id="person-nationality"
-                value={nationality}
-                maxLength={120}
-                onChange={(event) => setNationality(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-current-city">
-                Current city
-              </FieldLabel>
-              <Input
-                id="person-current-city"
-                value={currentCity}
-                maxLength={140}
-                onChange={(event) => setCurrentCity(event.target.value)}
-              />
-            </Field>
-            <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="person-current-address">
-                Current address
-              </FieldLabel>
-              <Textarea
-                id="person-current-address"
-                value={currentAddress}
-                maxLength={500}
-                rows={2}
-                onChange={(event) => setCurrentAddress(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-marital-status">
-                Marital status
-              </FieldLabel>
-              <Input
-                id="person-marital-status"
-                value={maritalStatus}
-                maxLength={80}
-                onChange={(event) => setMaritalStatus(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="person-languages">Languages</FieldLabel>
-              <Input
-                id="person-languages"
-                value={languages}
-                maxLength={500}
-                placeholder="Arabic, English, French"
-                onChange={(event) => setLanguages(event.target.value)}
-              />
-              <FieldDescription>
-                Separate languages with commas.
-              </FieldDescription>
-            </Field>
-            <FieldError className="sm:col-span-2">{error}</FieldError>
-          </FieldGroup>
-          <DialogFooter>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button type="button" variant="outline" size="sm">
+              <PencilIcon data-icon="inline-start" />
+              Edit overview
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-h-[90dvh] gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <form
+          className="grid max-h-[90dvh] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={submit}
+        >
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>Edit personal overview</DialogTitle>
+            <DialogDescription>
+              Keep the identity details most often needed for forms and official
+              processes in one clear summary.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-6 pb-6">
+            <FieldGroup className="grid gap-5 sm:grid-cols-2">
+              <Field data-invalid={Boolean(error)}>
+                <FieldLabel htmlFor="person-legal-name">
+                  Full legal name
+                </FieldLabel>
+                <Input
+                  id="person-legal-name"
+                  value={legalName}
+                  maxLength={140}
+                  onChange={(event) => setLegalName(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-preferred-name">
+                  Preferred name
+                </FieldLabel>
+                <Input
+                  id="person-preferred-name"
+                  value={preferredName}
+                  maxLength={100}
+                  onChange={(event) => setPreferredName(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-birthday">Date of birth</FieldLabel>
+                <Input
+                  id="person-birthday"
+                  type="date"
+                  value={birthday}
+                  onChange={(event) => setBirthday(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-birth-place">
+                  Place of birth
+                </FieldLabel>
+                <Input
+                  id="person-birth-place"
+                  value={placeOfBirth}
+                  maxLength={140}
+                  onChange={(event) => setPlaceOfBirth(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-nationality">
+                  Nationality
+                </FieldLabel>
+                <Input
+                  id="person-nationality"
+                  value={nationality}
+                  maxLength={120}
+                  onChange={(event) => setNationality(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-current-city">
+                  Current city
+                </FieldLabel>
+                <Input
+                  id="person-current-city"
+                  value={currentCity}
+                  maxLength={140}
+                  onChange={(event) => setCurrentCity(event.target.value)}
+                />
+              </Field>
+              <Field className="sm:col-span-2">
+                <FieldLabel htmlFor="person-current-address">
+                  Current address
+                </FieldLabel>
+                <Textarea
+                  id="person-current-address"
+                  value={currentAddress}
+                  maxLength={500}
+                  rows={2}
+                  onChange={(event) => setCurrentAddress(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-marital-status">
+                  Marital status
+                </FieldLabel>
+                <Input
+                  id="person-marital-status"
+                  value={maritalStatus}
+                  maxLength={80}
+                  onChange={(event) => setMaritalStatus(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="person-languages">Languages</FieldLabel>
+                <Input
+                  id="person-languages"
+                  value={languages}
+                  maxLength={500}
+                  placeholder="Arabic, English, French"
+                  onChange={(event) => setLanguages(event.target.value)}
+                />
+                <FieldDescription>
+                  Separate languages with commas.
+                </FieldDescription>
+              </Field>
+              <FieldError className="sm:col-span-2">{error}</FieldError>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="mx-0 mb-0 px-6 py-4">
             <Button type="submit" disabled={!preferredName.trim() || isSaving}>
               {isSaving ? <Spinner data-icon="inline-start" /> : null}
               {isSaving ? "Saving…" : "Save overview"}
@@ -297,14 +330,17 @@ export function PersonFactDialog({
   preset,
   onChanged,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   personId: string;
   fact?: PersonFact;
   preset?: UsefulFactField;
   onChanged: () => void | Promise<void>;
   trigger?: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+} & DialogControlProps) {
+  const [open, setOpen] = useDialogControl(controlledOpen, onOpenChange);
   const [label, setLabel] = useState(preset?.label ?? fact?.label ?? "");
   const [value, setValue] = useState(fact?.value ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -352,54 +388,61 @@ export function PersonFactDialog({
         if (nextOpen) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button type="button" variant="outline" size="sm">
-            <PlusIcon data-icon="inline-start" />
-            Add custom field
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {fact ? `Edit ${fieldName}` : `Add ${fieldName}`}
-          </DialogTitle>
-          <DialogDescription>
-            Save a stable fact that will be useful again. Notes and changing
-            plans belong in their own modules.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={submit}>
-          <FieldGroup>
-            {!preset ? (
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button type="button" variant="outline" size="sm">
+              <PlusIcon data-icon="inline-start" />
+              Add custom field
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-h-[90dvh] gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <form
+          className="grid max-h-[90dvh] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={submit}
+        >
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>
+              {fact ? `Edit ${fieldName}` : `Add ${fieldName}`}
+            </DialogTitle>
+            <DialogDescription>
+              Save a stable fact that will be useful again. Notes and changing
+              plans belong in their own modules.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-6 pb-6">
+            <FieldGroup>
+              {!preset ? (
+                <Field data-invalid={Boolean(error)}>
+                  <FieldLabel htmlFor="fact-label">Field name</FieldLabel>
+                  <Input
+                    id="fact-label"
+                    value={label}
+                    maxLength={80}
+                    placeholder="Jacket size"
+                    onChange={(event) => setLabel(event.target.value)}
+                    aria-invalid={Boolean(error)}
+                  />
+                </Field>
+              ) : null}
               <Field data-invalid={Boolean(error)}>
-                <FieldLabel htmlFor="fact-label">Field name</FieldLabel>
-                <Input
-                  id="fact-label"
-                  value={label}
-                  maxLength={80}
-                  placeholder="Jacket size"
-                  onChange={(event) => setLabel(event.target.value)}
+                <FieldLabel htmlFor="fact-value">Value</FieldLabel>
+                <Textarea
+                  id="fact-value"
+                  value={value}
+                  maxLength={500}
+                  rows={3}
+                  placeholder={preset?.placeholder}
+                  onChange={(event) => setValue(event.target.value)}
                   aria-invalid={Boolean(error)}
                 />
               </Field>
-            ) : null}
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="fact-value">Value</FieldLabel>
-              <Textarea
-                id="fact-value"
-                value={value}
-                maxLength={500}
-                rows={3}
-                placeholder={preset?.placeholder}
-                onChange={(event) => setValue(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-            </Field>
-            <FieldError>{error}</FieldError>
-          </FieldGroup>
-          <DialogFooter>
+              <FieldError>{error}</FieldError>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="mx-0 mb-0 px-6 py-4">
             <Button
               type="submit"
               disabled={!label.trim() || !value.trim() || isSaving}
@@ -420,19 +463,22 @@ export function OfficialRecordDialog({
   sourceDocuments,
   onChanged,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   personId: string;
   record?: OfficialRecord;
   sourceDocuments: PersonSourceDocument[];
   onChanged: () => void | Promise<void>;
   trigger?: ReactNode;
-}) {
+} & DialogControlProps) {
   const initialType = record
     ? isKnownRecordType(record.recordType)
       ? record.recordType
       : otherRecordType
     : officialRecordTypes[0];
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useDialogControl(controlledOpen, onOpenChange);
   const [selectedType, setSelectedType] = useState(initialType);
   const [customType, setCustomType] = useState(
     record && !isKnownRecordType(record.recordType) ? record.recordType : "",
@@ -514,163 +560,172 @@ export function OfficialRecordDialog({
         if (nextOpen) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button type="button" variant="outline" size="sm">
-            <PlusIcon data-icon="inline-start" />
-            Add official record
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>
-            {record ? `Edit ${record.recordType}` : "Add official information"}
-          </DialogTitle>
-          <DialogDescription>
-            Store the reusable fields here. Link the original file from
-            Documents instead of copying it into this profile.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={submit}>
-          <FieldGroup>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="record-type">Record type</FieldLabel>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger
-                  id="record-type"
-                  className="w-full"
-                  aria-invalid={Boolean(error)}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {officialRecordTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value={otherRecordType}>Other</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-            {selectedType === otherRecordType ? (
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button type="button" variant="outline" size="sm">
+              <PlusIcon data-icon="inline-start" />
+              Add official record
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-h-[90dvh] gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <form
+          className="grid max-h-[90dvh] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={submit}
+        >
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>
+              {record
+                ? `Edit ${record.recordType}`
+                : "Add official information"}
+            </DialogTitle>
+            <DialogDescription>
+              Store the reusable fields here. Link the original file from
+              Documents instead of copying it into this profile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-6 pb-6">
+            <FieldGroup>
               <Field data-invalid={Boolean(error)}>
-                <FieldLabel htmlFor="record-custom-type">
-                  Record name
+                <FieldLabel htmlFor="record-type">Record type</FieldLabel>
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger
+                    id="record-type"
+                    className="w-full"
+                    aria-invalid={Boolean(error)}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {officialRecordTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value={otherRecordType}>Other</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              {selectedType === otherRecordType ? (
+                <Field data-invalid={Boolean(error)}>
+                  <FieldLabel htmlFor="record-custom-type">
+                    Record name
+                  </FieldLabel>
+                  <Input
+                    id="record-custom-type"
+                    value={customType}
+                    maxLength={80}
+                    placeholder="Professional licence"
+                    onChange={(event) => setCustomType(event.target.value)}
+                    aria-invalid={Boolean(error)}
+                  />
+                </Field>
+              ) : null}
+              <Field>
+                <FieldLabel htmlFor="record-identifier">Identifier</FieldLabel>
+                <Input
+                  id="record-identifier"
+                  value={identifier}
+                  maxLength={160}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="record-authority">
+                  Issuing authority
                 </FieldLabel>
                 <Input
-                  id="record-custom-type"
-                  value={customType}
-                  maxLength={80}
-                  placeholder="Professional licence"
-                  onChange={(event) => setCustomType(event.target.value)}
-                  aria-invalid={Boolean(error)}
-                />
-              </Field>
-            ) : null}
-            <Field>
-              <FieldLabel htmlFor="record-identifier">Identifier</FieldLabel>
-              <Input
-                id="record-identifier"
-                value={identifier}
-                maxLength={160}
-                onChange={(event) => setIdentifier(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="record-authority">
-                Issuing authority
-              </FieldLabel>
-              <Input
-                id="record-authority"
-                value={issuingAuthority}
-                maxLength={160}
-                onChange={(event) => setIssuingAuthority(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="record-country">Country</FieldLabel>
-              <Input
-                id="record-country"
-                value={country}
-                maxLength={120}
-                onChange={(event) => setCountry(event.target.value)}
-              />
-            </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="record-issued">Issue date</FieldLabel>
-                <Input
-                  id="record-issued"
-                  type="date"
-                  value={issueDate}
-                  onChange={(event) => setIssueDate(event.target.value)}
+                  id="record-authority"
+                  value={issuingAuthority}
+                  maxLength={160}
+                  onChange={(event) => setIssuingAuthority(event.target.value)}
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="record-expiry">Expiry date</FieldLabel>
+                <FieldLabel htmlFor="record-country">Country</FieldLabel>
                 <Input
-                  id="record-expiry"
-                  type="date"
-                  value={expiryDate}
-                  onChange={(event) => setExpiryDate(event.target.value)}
+                  id="record-country"
+                  value={country}
+                  maxLength={120}
+                  onChange={(event) => setCountry(event.target.value)}
                 />
               </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor="record-status">Status</FieldLabel>
-              <Select
-                value={status}
-                onValueChange={(nextStatus) =>
-                  setStatus(nextStatus as OfficialRecordStatus)
-                }
-              >
-                <SelectTrigger id="record-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {officialRecordStatuses.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="record-issued">Issue date</FieldLabel>
+                  <Input
+                    id="record-issued"
+                    type="date"
+                    value={issueDate}
+                    onChange={(event) => setIssueDate(event.target.value)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="record-expiry">Expiry date</FieldLabel>
+                  <Input
+                    id="record-expiry"
+                    type="date"
+                    value={expiryDate}
+                    onChange={(event) => setExpiryDate(event.target.value)}
+                  />
+                </Field>
+              </div>
+              <Field>
+                <FieldLabel htmlFor="record-status">Status</FieldLabel>
+                <Select
+                  value={status}
+                  onValueChange={(nextStatus) =>
+                    setStatus(nextStatus as OfficialRecordStatus)
+                  }
+                >
+                  <SelectTrigger id="record-status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {officialRecordStatuses.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="record-source">Source document</FieldLabel>
+                <Select
+                  value={sourceDocumentId}
+                  onValueChange={setSourceDocumentId}
+                >
+                  <SelectTrigger id="record-source" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={noSourceDocument}>
+                        No document linked
                       </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="record-source">Source document</FieldLabel>
-              <Select
-                value={sourceDocumentId}
-                onValueChange={setSourceDocumentId}
-              >
-                <SelectTrigger id="record-source" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value={noSourceDocument}>
-                      No document linked
-                    </SelectItem>
-                    {sourceDocuments.map((document) => (
-                      <SelectItem key={document.id} value={document.id}>
-                        {document.title}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <FieldDescription>
-                The original file remains in Documents.
-              </FieldDescription>
-            </Field>
-            <FieldError>{error}</FieldError>
-          </FieldGroup>
-          <DialogFooter>
+                      {sourceDocuments.map((document) => (
+                        <SelectItem key={document.id} value={document.id}>
+                          {document.title}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  The original file remains in Documents.
+                </FieldDescription>
+              </Field>
+              <FieldError>{error}</FieldError>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="mx-0 mb-0 px-6 py-4">
             <Button type="submit" disabled={!recordType || isSaving}>
               {isSaving ? <Spinner data-icon="inline-start" /> : null}
               {isSaving ? "Saving…" : "Save record"}
@@ -687,13 +742,16 @@ export function PersonalDateDialog({
   date,
   onChanged,
   trigger,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   personId: string;
   date?: PersonalDate;
   onChanged: () => void | Promise<void>;
   trigger?: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+} & DialogControlProps) {
+  const [open, setOpen] = useDialogControl(controlledOpen, onOpenChange);
   const [label, setLabel] = useState(date?.label ?? "");
   const [occursOn, setOccursOn] = useState(date?.occursOn ?? "");
   const [recursAnnually, setRecursAnnually] = useState(
@@ -741,65 +799,72 @@ export function PersonalDateDialog({
         if (nextOpen) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button type="button" variant="outline" size="sm">
-            <PlusIcon data-icon="inline-start" />
-            Add personal date
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {date ? `Edit ${date.label}` : "Add a personal date"}
-          </DialogTitle>
-          <DialogDescription>
-            Use this for a renewal or personal date that is not already supplied
-            by the overview or an official record.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="flex flex-col gap-5" onSubmit={submit}>
-          <FieldGroup>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="personal-date-label">Name</FieldLabel>
-              <Input
-                id="personal-date-label"
-                value={label}
-                maxLength={120}
-                placeholder="Professional licence renewal"
-                onChange={(event) => setLabel(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-            </Field>
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="personal-date-value">Date</FieldLabel>
-              <Input
-                id="personal-date-value"
-                type="date"
-                value={occursOn}
-                onChange={(event) => setOccursOn(event.target.value)}
-                aria-invalid={Boolean(error)}
-              />
-            </Field>
-            <Field orientation="horizontal" className="rounded-xl border p-3">
-              <FieldContent>
-                <FieldLabel htmlFor="personal-date-repeat">
-                  Repeat every year
-                </FieldLabel>
-                <FieldDescription>
-                  Useful for annual registrations and recurring renewals.
-                </FieldDescription>
-              </FieldContent>
-              <Switch
-                id="personal-date-repeat"
-                checked={recursAnnually}
-                onCheckedChange={setRecursAnnually}
-              />
-            </Field>
-            <FieldError>{error}</FieldError>
-          </FieldGroup>
-          <DialogFooter>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button type="button" variant="outline" size="sm">
+              <PlusIcon data-icon="inline-start" />
+              Add personal date
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-h-[90dvh] gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <form
+          className="grid max-h-[90dvh] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto]"
+          onSubmit={submit}
+        >
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>
+              {date ? `Edit ${date.label}` : "Add a personal date"}
+            </DialogTitle>
+            <DialogDescription>
+              Use this for a renewal or personal date that is not already
+              supplied by the overview or an official record.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto px-6 pb-6">
+            <FieldGroup>
+              <Field data-invalid={Boolean(error)}>
+                <FieldLabel htmlFor="personal-date-label">Name</FieldLabel>
+                <Input
+                  id="personal-date-label"
+                  value={label}
+                  maxLength={120}
+                  placeholder="Professional licence renewal"
+                  onChange={(event) => setLabel(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                />
+              </Field>
+              <Field data-invalid={Boolean(error)}>
+                <FieldLabel htmlFor="personal-date-value">Date</FieldLabel>
+                <Input
+                  id="personal-date-value"
+                  type="date"
+                  value={occursOn}
+                  onChange={(event) => setOccursOn(event.target.value)}
+                  aria-invalid={Boolean(error)}
+                />
+              </Field>
+              <Field orientation="horizontal" className="rounded-xl border p-3">
+                <FieldContent>
+                  <FieldLabel htmlFor="personal-date-repeat">
+                    Repeat every year
+                  </FieldLabel>
+                  <FieldDescription>
+                    Useful for annual registrations and recurring renewals.
+                  </FieldDescription>
+                </FieldContent>
+                <Switch
+                  id="personal-date-repeat"
+                  checked={recursAnnually}
+                  onCheckedChange={setRecursAnnually}
+                />
+              </Field>
+              <FieldError>{error}</FieldError>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="mx-0 mb-0 px-6 py-4">
             <Button
               type="submit"
               disabled={!label.trim() || !occursOn || isSaving}

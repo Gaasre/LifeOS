@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  CalendarClockIcon,
-  FileTextIcon,
-  HeartHandshakeIcon,
-  UsersRoundIcon,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { HeartHandshakeIcon } from "lucide-react";
+import { MotionConfig } from "motion/react";
 
 import type { FamilyDashboard } from "@lifeos/rpc";
 import {
@@ -13,31 +8,11 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@lifeos/ui/components/alert";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@lifeos/ui/components/avatar";
-import { Badge } from "@lifeos/ui/components/badge";
 import { Button } from "@lifeos/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@lifeos/ui/components/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@lifeos/ui/components/empty";
 import { Skeleton } from "@lifeos/ui/components/skeleton";
 
 import { AppHeader } from "@/components/app-header";
+import { FamilyDashboardView } from "@/features/family/family-dashboard";
 import {
   CreateFamilyDialog,
   InviteFamilyDialog,
@@ -45,33 +20,25 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { rpcClient } from "@/lib/rpc-client";
 
-function initials(name: string) {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "F"
-  );
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
 function FamilyLoading() {
   return (
-    <div className="mt-12 flex flex-col gap-8">
-      <Skeleton className="h-44 rounded-2xl" />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Skeleton className="h-64 rounded-2xl" />
-        <Skeleton className="h-64 rounded-2xl" />
+    <div className="mt-10 flex flex-col gap-5 lg:mt-14">
+      <div className="mb-2 space-y-3">
+        <Skeleton className="h-3 w-40 rounded-full" />
+        <Skeleton className="h-12 w-72 max-w-full rounded-xl" />
+        <Skeleton className="h-5 w-[34rem] max-w-full rounded-lg" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(22rem,0.8fr)]">
+        <Skeleton className="min-h-[29rem] rounded-2xl" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="min-h-72 rounded-2xl lg:min-h-[29rem]" />
+          <Skeleton className="min-h-72 rounded-2xl lg:min-h-[29rem]" />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Skeleton className="h-36 rounded-2xl" />
+        <Skeleton className="h-36 rounded-2xl" />
+        <Skeleton className="h-36 rounded-2xl" />
       </div>
     </div>
   );
@@ -83,134 +50,34 @@ function FamilyEmptyState({
   onCreated: (organizationId: string) => Promise<void>;
 }) {
   return (
-    <Empty className="mt-12 min-h-[28rem] rounded-2xl border bg-card/20">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <HeartHandshakeIcon />
-        </EmptyMedia>
-        <EmptyTitle>Start your Family</EmptyTitle>
-        <EmptyDescription>
-          Create one household for you and your partner. Everything you add
-          stays available to both of you; person and Family spaces only change
-          what is in focus.
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <CreateFamilyDialog
-          onCreated={onCreated}
-          trigger={<Button type="button">Create Family</Button>}
-        />
-      </EmptyContent>
-    </Empty>
-  );
-}
-
-function PeopleSection({ dashboard }: { dashboard: FamilyDashboard }) {
-  return (
-    <Card className="bg-card/35">
-      <CardHeader>
-        <CardTitle>People</CardTitle>
-        <CardDescription>
-          These are person views, not separate accounts or private folders.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
-        {dashboard.people.map((person) => (
-          <Button
-            key={person.id}
-            asChild
-            variant="outline"
-            className="h-auto justify-start px-4 py-3"
-          >
-            <Link to={`/people/${person.id}`}>
-              <Avatar className="size-10">
-                <AvatarImage
-                  src={person.avatarUrl ?? undefined}
-                  alt={person.preferredName}
-                />
-                <AvatarFallback>
-                  {initials(person.preferredName)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 flex-col items-start">
-                <span className="truncate font-medium">
-                  {person.preferredName}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {person.isCurrentUser ? "Your person view" : "Person view"}
-                </span>
-              </span>
-            </Link>
-          </Button>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecentDocuments({ dashboard }: { dashboard: FamilyDashboard }) {
-  return (
-    <Card className="bg-card/35">
-      <CardHeader>
-        <CardTitle>Recent documents</CardTitle>
-        <CardDescription>
-          One canonical vault, shown here through the combined Family view.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {dashboard.recentDocuments.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {dashboard.recentDocuments.map((document) => (
-              <Button
-                key={document.id}
-                asChild
-                variant="ghost"
-                className="h-auto justify-start px-3 py-3"
-              >
-                <Link to={`/documents?document=${document.id}`}>
-                  <FileTextIcon data-icon="inline-start" />
-                  <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                    <span className="truncate font-medium">
-                      {document.title}
-                    </span>
-                    <span className="flex flex-wrap gap-1.5">
-                      <Badge variant="secondary">{document.kind}</Badge>
-                      {document.people.map((person) => (
-                        <Badge key={person} variant="outline">
-                          {person}
-                        </Badge>
-                      ))}
-                      {document.modules.map((module) => (
-                        <Badge key={module} variant="outline">
-                          {module}
-                        </Badge>
-                      ))}
-                    </span>
-                  </span>
-                </Link>
-              </Button>
-            ))}
-          </div>
-        ) : (
-          <Empty className="min-h-52 bg-muted/10">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <FileTextIcon />
-              </EmptyMedia>
-              <EmptyTitle>No documents yet</EmptyTitle>
-              <EmptyDescription>
-                Documents added to the household appear here automatically.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button asChild variant="outline">
-                <Link to="/documents">Open Documents</Link>
-              </Button>
-            </EmptyContent>
-          </Empty>
-        )}
-      </CardContent>
-    </Card>
+    <section className="relative isolate mt-10 min-h-[32rem] overflow-hidden rounded-2xl border border-white/8 bg-card/25 lg:mt-14">
+      <img
+        src="/images/family/week-hero-v2.jpg"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 size-full object-cover object-center opacity-65 grayscale brightness-[0.55]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/10" />
+      <div className="relative z-10 flex min-h-[32rem] max-w-xl flex-col items-start justify-end p-6 sm:p-10">
+        <span className="mb-6 grid size-12 place-items-center rounded-full border border-family-accent/30 bg-family-accent/12 text-family-accent">
+          <HeartHandshakeIcon className="size-5" />
+        </span>
+        <h1 className="font-heading text-4xl tracking-tight sm:text-5xl">
+          Start your Family
+        </h1>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+          Create one household for both of you. LifeOS will turn the information
+          you already manage into a shared rhythm of people, dates, plans, and
+          things that need attention.
+        </p>
+        <div className="mt-7">
+          <CreateFamilyDialog
+            onCreated={onCreated}
+            trigger={<Button type="button">Create Family</Button>}
+          />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -223,6 +90,7 @@ export function FamilyPage() {
   const [dashboard, setDashboard] = useState<FamilyDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const activeOrganizationId = (
     session?.session as { activeOrganizationId?: string | null } | undefined
@@ -270,81 +138,49 @@ export function FamilyPage() {
   );
 
   return (
-    <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-        <AppHeader section="Overview" />
+    <MotionConfig reducedMotion="user">
+      <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
+        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+          <AppHeader section="Family" />
 
-        {organizations.isPending || isLoading ? <FamilyLoading /> : null}
+          {organizations.isPending || isLoading ? <FamilyLoading /> : null}
 
-        {!organizations.isPending && !isLoading && error ? (
-          <Alert variant="destructive" className="mt-12">
-            <AlertTitle>Your Family view is out of reach</AlertTitle>
-            <AlertDescription className="flex flex-col items-start gap-3">
-              {error}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void loadDashboard(selectedOrganizationId)}
-              >
-                Try again
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+          {!organizations.isPending && !isLoading && error ? (
+            <Alert variant="destructive" className="mt-12">
+              <AlertTitle>Your Family view is out of reach</AlertTitle>
+              <AlertDescription className="flex flex-col items-start gap-3">
+                {error}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void loadDashboard(selectedOrganizationId)}
+                >
+                  Try again
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-        {!organizations.isPending && !isLoading && !error && !dashboard ? (
-          <FamilyEmptyState onCreated={handleCreated} />
-        ) : null}
+          {!organizations.isPending && !isLoading && !error && !dashboard ? (
+            <FamilyEmptyState onCreated={handleCreated} />
+          ) : null}
 
-        {!isLoading && dashboard ? (
-          <div className="mt-10 flex flex-col gap-6 lg:mt-14">
-            <section className="overflow-hidden rounded-2xl border bg-card/30">
-              <div className="grid min-h-48 gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
-                <div className="max-w-2xl">
-                  <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
-                    Computed household perspective
-                  </p>
-                  <h1 className="mt-2 font-heading text-4xl tracking-tight sm:text-5xl">
-                    {dashboard.family.name}
-                  </h1>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    Everything related to either person, both people, or the
-                    household comes together here automatically.
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Badge variant="secondary">
-                      <UsersRoundIcon data-icon="inline-start" />
-                      {dashboard.summary.people} people
-                    </Badge>
-                    <Badge variant="secondary">
-                      <FileTextIcon data-icon="inline-start" />
-                      {dashboard.summary.documents}{" "}
-                      {dashboard.summary.documents === 1
-                        ? "document"
-                        : "documents"}
-                    </Badge>
-                    {dashboard.summary.needsAttention > 0 ? (
-                      <Badge variant="outline">
-                        <CalendarClockIcon data-icon="inline-start" />
-                        {dashboard.summary.needsAttention} need attention
-                      </Badge>
-                    ) : null}
-                  </div>
-                </div>
-                <InviteFamilyDialog
-                  organizationId={dashboard.family.id}
-                  disabled={dashboard.people.length >= 2}
-                />
-              </div>
-            </section>
-
-            <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-              <PeopleSection dashboard={dashboard} />
-              <RecentDocuments dashboard={dashboard} />
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </main>
+          {!isLoading && dashboard ? (
+            <>
+              <FamilyDashboardView
+                dashboard={dashboard}
+                onInvite={() => setInviteOpen(true)}
+              />
+              <InviteFamilyDialog
+                organizationId={dashboard.family.id}
+                disabled={dashboard.people.length >= 2}
+                open={inviteOpen}
+                onOpenChange={setInviteOpen}
+              />
+            </>
+          ) : null}
+        </div>
+      </main>
+    </MotionConfig>
   );
 }

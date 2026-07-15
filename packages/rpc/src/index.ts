@@ -103,6 +103,46 @@ export const familyDocumentSchema = z.object({
   addedAt: z.string(),
 });
 
+export const familyMomentSchema = z.object({
+  id: z.string(),
+  kind: z.enum([
+    "document",
+    "official_record",
+    "personal_date",
+    "birthday",
+    "project",
+    "money",
+  ]),
+  title: z.string(),
+  detail: z.string().nullable(),
+  occursOn: z.string().nullable(),
+  tone: z.enum(["attention", "upcoming", "calm"]),
+  personIds: z.array(z.string().uuid()),
+  people: z.array(z.string()),
+  destination: z.enum(["documents", "me", "projects", "money"]),
+  targetId: z.string().uuid().nullable(),
+  amountMinor: z.number().int().positive().nullable(),
+  currency: z.string().nullable(),
+});
+
+export const familyProjectSummarySchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  outcome: z.string(),
+  coverImage: z.string().nullable(),
+  people: z.array(personSummarySchema),
+  modules: z.array(z.string()),
+  nextStep: z
+    .object({
+      id: z.string().uuid(),
+      title: z.string(),
+      dueDate: z.string().nullable(),
+    })
+    .nullable(),
+  completedSteps: z.number().int().min(0),
+  totalSteps: z.number().int().min(0),
+});
+
 export const familyDashboardSchema = z.object({
   family: z.object({
     id: z.string(),
@@ -115,12 +155,17 @@ export const familyDashboardSchema = z.object({
     userId: z.string(),
     personId: z.string().uuid(),
   }),
+  today: z.string(),
   people: z.array(personSummarySchema),
   recentDocuments: z.array(familyDocumentSchema),
+  attention: z.array(familyMomentSchema),
+  upcoming: z.array(familyMomentSchema),
+  sharedProjects: z.array(familyProjectSummarySchema),
   summary: z.object({
     people: z.number().int().min(0),
     documents: z.number().int().min(0),
     needsAttention: z.number().int().min(0),
+    sharedProjects: z.number().int().min(0),
   }),
 });
 
@@ -252,6 +297,8 @@ export const lifeOsContract = {
 
 export type LifeOsRpcClient = ContractRouterClient<typeof lifeOsContract>;
 export type FamilyDashboard = z.infer<typeof familyDashboardSchema>;
+export type FamilyMoment = z.infer<typeof familyMomentSchema>;
+export type FamilyProjectSummary = z.infer<typeof familyProjectSummarySchema>;
 export type FamilyInboxInvitation = z.infer<typeof familyInboxInvitationSchema>;
 export type DocumentRecord = z.infer<typeof documentRecordSchema>;
 export type DocumentKind = z.infer<typeof documentKindSchema>;
