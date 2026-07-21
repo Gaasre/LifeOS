@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.15",
     "@hono/node-server": "^2.0.8",
     "@lifeos/access": "workspace:*",
     "@lifeos/auth": "workspace:*",
@@ -22,9 +23,11 @@
     "@lifeos/rpc": "workspace:*",
     "@lifeos/storage": "workspace:*",
     "@orpc/server": "^1.14.7",
+    "ai": "^7.0.27",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.28"
+    "hono": "^4.12.28",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

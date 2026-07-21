@@ -305,14 +305,27 @@ export type DocumentKind = z.infer<typeof documentKindSchema>;
 export type DocumentPickerItem = z.infer<typeof documentPickerItemSchema>;
 export type DocumentPickerPage = z.infer<typeof documentPickerPageSchema>;
 
-export function createLifeOsRpcClient(baseUrl: string): LifeOsRpcClient {
+export type LifeOsRpcClientOptions = {
+  headers?: HeadersInit;
+};
+
+export function createLifeOsRpcClient(
+  baseUrl: string,
+  options: LifeOsRpcClientOptions = {},
+): LifeOsRpcClient {
   const link = new RPCLink({
     url: `${baseUrl.replace(/\/$/, "")}/rpc`,
-    fetch: (request, init) =>
-      fetch(request, {
+    fetch: (request, init) => {
+      const headers = new Headers(request.headers);
+      new Headers(options.headers).forEach((value, key) => {
+        headers.set(key, value);
+      });
+
+      return fetch(new Request(request, { headers }), {
         ...init,
         credentials: "include",
-      }),
+      });
+    },
   });
 
   return createORPCClient(link);

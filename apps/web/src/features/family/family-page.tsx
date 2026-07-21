@@ -12,6 +12,10 @@ import { Button } from "@lifeos/ui/components/button";
 import { Skeleton } from "@lifeos/ui/components/skeleton";
 
 import { AppHeader } from "@/components/app-header";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 import { FamilyDashboardView } from "@/features/family/family-dashboard";
 import {
   CreateFamilyDialog,
@@ -22,7 +26,7 @@ import { rpcClient } from "@/lib/rpc-client";
 
 function FamilyLoading() {
   return (
-    <div className="mt-10 flex flex-col gap-5 lg:mt-14">
+    <div className="flex flex-col gap-5">
       <div className="mb-2 space-y-3">
         <Skeleton className="h-3 w-40 rounded-full" />
         <Skeleton className="h-12 w-72 max-w-full rounded-xl" />
@@ -50,7 +54,7 @@ function FamilyEmptyState({
   onCreated: (organizationId: string) => Promise<void>;
 }) {
   return (
-    <section className="relative isolate mt-10 min-h-[32rem] overflow-hidden rounded-2xl border border-white/8 bg-card/25 lg:mt-14">
+    <section className="relative isolate min-h-[32rem] overflow-hidden rounded-2xl border border-white/8 bg-card/25">
       <img
         src="/images/family/week-hero-v2.jpg"
         alt=""
@@ -140,46 +144,48 @@ export function FamilyPage() {
   return (
     <MotionConfig reducedMotion="user">
       <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader section="Family" />
 
-          {organizations.isPending || isLoading ? <FamilyLoading /> : null}
+          <ModulePageContent>
+            {organizations.isPending || isLoading ? <FamilyLoading /> : null}
 
-          {!organizations.isPending && !isLoading && error ? (
-            <Alert variant="destructive" className="mt-12">
-              <AlertTitle>Your Family view is out of reach</AlertTitle>
-              <AlertDescription className="flex flex-col items-start gap-3">
-                {error}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void loadDashboard(selectedOrganizationId)}
-                >
-                  Try again
-                </Button>
-              </AlertDescription>
-            </Alert>
-          ) : null}
+            {!organizations.isPending && !isLoading && error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Your Family view is out of reach</AlertTitle>
+                <AlertDescription className="flex flex-col items-start gap-3">
+                  {error}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void loadDashboard(selectedOrganizationId)}
+                  >
+                    Try again
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          {!organizations.isPending && !isLoading && !error && !dashboard ? (
-            <FamilyEmptyState onCreated={handleCreated} />
-          ) : null}
+            {!organizations.isPending && !isLoading && !error && !dashboard ? (
+              <FamilyEmptyState onCreated={handleCreated} />
+            ) : null}
 
-          {!isLoading && dashboard ? (
-            <>
-              <FamilyDashboardView
-                dashboard={dashboard}
-                onInvite={() => setInviteOpen(true)}
-              />
-              <InviteFamilyDialog
-                organizationId={dashboard.family.id}
-                disabled={dashboard.people.length >= 2}
-                open={inviteOpen}
-                onOpenChange={setInviteOpen}
-              />
-            </>
-          ) : null}
-        </div>
+            {!isLoading && dashboard ? (
+              <>
+                <FamilyDashboardView
+                  dashboard={dashboard}
+                  onInvite={() => setInviteOpen(true)}
+                />
+                <InviteFamilyDialog
+                  organizationId={dashboard.family.id}
+                  disabled={dashboard.people.length >= 2}
+                  open={inviteOpen}
+                  onOpenChange={setInviteOpen}
+                />
+              </>
+            ) : null}
+          </ModulePageContent>
+        </ModulePageContainer>
       </main>
     </MotionConfig>
   );

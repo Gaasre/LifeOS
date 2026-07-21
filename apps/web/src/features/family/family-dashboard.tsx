@@ -668,10 +668,9 @@ function CalendarMomentTile({
   dayCount: number;
   viewerPersonId: string;
 }) {
-  const span = Math.min(moment.title.length > 18 ? 3 : 2, dayCount - dayIndex);
   const style = {
     left: `calc(${(dayIndex / dayCount) * 100}% + 0.25rem)`,
-    width: `calc(${(span / dayCount) * 100}% - 0.5rem)`,
+    width: `calc(${100 / dayCount}% - 0.5rem)`,
     top: `${10 + (track % 3) * 40}px`,
   };
 
@@ -1168,7 +1167,7 @@ export function FamilyDashboardView({
   return (
     <>
       <motion.div
-        className="mt-10 pb-24 lg:mt-14"
+        className="pb-24"
         variants={pageVariants}
         initial="hidden"
         animate="visible"

@@ -10,6 +10,7 @@ import { logger } from "hono/logger";
 import { rpcPackage } from "@lifeos/rpc";
 
 import { lifeOsRouter } from "./family-router";
+import { handleAssistantChat } from "./assistant/chat";
 
 type Variables = {
   user: AuthSession["user"];
@@ -33,7 +34,7 @@ app.use(
     origin: (origin) => (trustedOrigins.includes(origin) ? origin : null),
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["POST", "GET", "OPTIONS"],
-    exposeHeaders: ["Content-Length"],
+    exposeHeaders: ["Content-Length", "x-vercel-ai-ui-message-stream"],
     maxAge: 600,
     credentials: true,
   }),
@@ -98,6 +99,10 @@ app.get("/api/private/session", (c) =>
       expiresAt: c.get("session").expiresAt,
     },
   }),
+);
+
+app.post("/api/private/assistant/chat", (c) =>
+  handleAssistantChat(c.req.raw, c.get("user").name || "you"),
 );
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));

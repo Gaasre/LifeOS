@@ -28,6 +28,10 @@ import { Skeleton } from "@lifeos/ui/components/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@lifeos/ui/components/tabs";
 
 import { AppHeader } from "@/components/app-header";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 import { FitnessActions } from "@/features/fitness/components/fitness-actions";
 import { FitnessEditorDialogs } from "@/features/fitness/components/fitness-editor-dialogs";
 import { MealDetailDialog } from "@/features/fitness/components/meal-detail-dialog";
@@ -381,160 +385,162 @@ export function FitnessPage() {
         animate="visible"
         variants={fitnessPageVariants}
       >
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader section="Fitness & Nutrition" />
 
-          <motion.section
-            className="mt-12 mb-8 flex flex-col gap-6 lg:mt-18 lg:flex-row lg:items-end lg:justify-between lg:pl-32"
-            aria-labelledby="fitness-title"
-            variants={fitnessSectionVariants}
-          >
-            <div>
-              <p className="mb-3 flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-fitness-accent uppercase">
-                <DumbbellIcon className="size-4" /> Execute the plan
-              </p>
-              <h1
-                id="fitness-title"
-                className="m-0 text-[clamp(2.25rem,8vw,3.5rem)] leading-[1.01] font-normal tracking-[-0.035em]"
-              >
-                Fitness & Nutrition
-              </h1>
-              <p className="mt-3 mb-0 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                Eat well. Train with purpose. See the direction without the
-                noise.
-              </p>
-              {dashboard ? (
-                <Badge variant="outline" className="mt-4 bg-card/35">
-                  <CalendarDaysIcon /> {dashboard.weekLabel}
-                </Badge>
-              ) : null}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex h-9 items-center rounded-lg border border-border bg-card/45 p-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Previous day"
-                  onClick={() =>
-                    setSelectedDate((date) => addCalendarDays(date, -1))
-                  }
-                >
-                  <ChevronLeftIcon className="transition-transform duration-200 group-hover/button:-translate-x-0.5 motion-reduce:transition-none" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative min-w-24 overflow-hidden px-2 font-normal"
-                  onClick={() => setSelectedDate(currentDate)}
-                  title="Return to today"
-                >
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.span
-                      key={selectedDate}
-                      className="inline-flex"
-                      initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -3 }}
-                      transition={{ duration: 0.16 }}
-                    >
-                      {selectedDate === currentDate
-                        ? "Today"
-                        : formatCalendarDate(selectedDate, { short: true })}
-                    </motion.span>
-                  </AnimatePresence>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Next day"
-                  onClick={() =>
-                    setSelectedDate((date) => addCalendarDays(date, 1))
-                  }
-                >
-                  <ChevronRightIcon className="transition-transform duration-200 group-hover/button:translate-x-0.5 motion-reduce:transition-none" />
-                </Button>
-              </div>
-            </div>
-          </motion.section>
-
-          <Tabs
-            value={section}
-            onValueChange={(value) => navigate(value as FitnessSection)}
-          >
-            <motion.div
-              className="mb-6 overflow-x-auto border-b border-border/70 pb-1 lg:ml-32"
+          <ModulePageContent>
+            <motion.section
+              className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
+              aria-labelledby="fitness-title"
               variants={fitnessSectionVariants}
             >
-              <TabsList variant="line" className="h-10 min-w-max gap-5">
-                {sectionOptions.map(({ value, label }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="px-0 pb-3 font-normal after:hidden"
-                  >
-                    {label}
-                    {section === value ? (
-                      <motion.span
-                        layoutId="fitness-active-section"
-                        className="absolute inset-x-0 -bottom-[5px] h-0.5 rounded-full bg-foreground"
-                        transition={fitnessSpring}
-                        aria-hidden
-                      />
-                    ) : null}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </motion.div>
-          </Tabs>
-
-          <div id="fitness-content" className="scroll-mt-6 pb-16 lg:pl-32">
-            {!personId ? (
-              <Alert>
-                <AlertTitle>Choose a person</AlertTitle>
-                <AlertDescription>
-                  Fitness and nutrition plans belong to a person. Choose one
-                  from the perspective selector in the top navigation.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            {personId && fitnessQuery.isPending ? <FitnessLoading /> : null}
-            {fitnessQuery.isError && !dashboard ? (
-              <Alert variant="destructive">
-                <AlertTitle>
-                  Fitness and Nutrition could not be loaded
-                </AlertTitle>
-                <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-                  <span>
-                    {fitnessQuery.error instanceof Error
-                      ? fitnessQuery.error.message
-                      : "Try again in a moment."}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void fitnessQuery.refetch()}
-                  >
-                    Try again
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            <AnimatePresence mode="wait" initial={false}>
-              {dashboard ? (
-                <motion.div
-                  key={`${section}-${dashboard.person.id}-${selectedDate}`}
-                  variants={fitnessViewVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
+              <div>
+                <p className="mb-3 flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-fitness-accent uppercase">
+                  <DumbbellIcon className="size-4" /> Execute the plan
+                </p>
+                <h1
+                  id="fitness-title"
+                  className="m-0 text-[clamp(2.25rem,8vw,3.5rem)] leading-[1.01] font-normal tracking-[-0.035em]"
                 >
-                  {renderSection()}
-                </motion.div>
+                  Fitness & Nutrition
+                </h1>
+                <p className="mt-3 mb-0 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                  Eat well. Train with purpose. See the direction without the
+                  noise.
+                </p>
+                {dashboard ? (
+                  <Badge variant="outline" className="mt-4 bg-card/35">
+                    <CalendarDaysIcon /> {dashboard.weekLabel}
+                  </Badge>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex h-9 items-center rounded-lg border border-border bg-card/45 p-0.5">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Previous day"
+                    onClick={() =>
+                      setSelectedDate((date) => addCalendarDays(date, -1))
+                    }
+                  >
+                    <ChevronLeftIcon className="transition-transform duration-200 group-hover/button:-translate-x-0.5 motion-reduce:transition-none" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative min-w-24 overflow-hidden px-2 font-normal"
+                    onClick={() => setSelectedDate(currentDate)}
+                    title="Return to today"
+                  >
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.span
+                        key={selectedDate}
+                        className="inline-flex"
+                        initial={{ opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.16 }}
+                      >
+                        {selectedDate === currentDate
+                          ? "Today"
+                          : formatCalendarDate(selectedDate, { short: true })}
+                      </motion.span>
+                    </AnimatePresence>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Next day"
+                    onClick={() =>
+                      setSelectedDate((date) => addCalendarDays(date, 1))
+                    }
+                  >
+                    <ChevronRightIcon className="transition-transform duration-200 group-hover/button:translate-x-0.5 motion-reduce:transition-none" />
+                  </Button>
+                </div>
+              </div>
+            </motion.section>
+
+            <Tabs
+              value={section}
+              onValueChange={(value) => navigate(value as FitnessSection)}
+            >
+              <motion.div
+                className="mb-6 overflow-x-auto border-b border-border/70 pb-1"
+                variants={fitnessSectionVariants}
+              >
+                <TabsList variant="line" className="h-10 min-w-max gap-5">
+                  {sectionOptions.map(({ value, label }) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="px-0 pb-3 font-normal after:hidden"
+                    >
+                      {label}
+                      {section === value ? (
+                        <motion.span
+                          layoutId="fitness-active-section"
+                          className="absolute inset-x-0 -bottom-[5px] h-0.5 rounded-full bg-foreground"
+                          transition={fitnessSpring}
+                          aria-hidden
+                        />
+                      ) : null}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </motion.div>
+            </Tabs>
+
+            <div id="fitness-content" className="scroll-mt-6 pb-16">
+              {!personId ? (
+                <Alert>
+                  <AlertTitle>Choose a person</AlertTitle>
+                  <AlertDescription>
+                    Fitness and nutrition plans belong to a person. Choose one
+                    from the perspective selector in the top navigation.
+                  </AlertDescription>
+                </Alert>
               ) : null}
-            </AnimatePresence>
-          </div>
-        </div>
+              {personId && fitnessQuery.isPending ? <FitnessLoading /> : null}
+              {fitnessQuery.isError && !dashboard ? (
+                <Alert variant="destructive">
+                  <AlertTitle>
+                    Fitness and Nutrition could not be loaded
+                  </AlertTitle>
+                  <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                    <span>
+                      {fitnessQuery.error instanceof Error
+                        ? fitnessQuery.error.message
+                        : "Try again in a moment."}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void fitnessQuery.refetch()}
+                    >
+                      Try again
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              <AnimatePresence mode="wait" initial={false}>
+                {dashboard ? (
+                  <motion.div
+                    key={`${section}-${dashboard.person.id}-${selectedDate}`}
+                    variants={fitnessViewVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    {renderSection()}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          </ModulePageContent>
+        </ModulePageContainer>
 
         <motion.div
           className="fixed right-4 bottom-4 sm:right-6 sm:bottom-6"

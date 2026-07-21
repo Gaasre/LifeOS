@@ -38,6 +38,10 @@ import {
 
 import { AppHeader } from "@/components/app-header";
 import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
+import {
   CalculationDialog,
   MoneySettingsDialog,
 } from "@/features/money/components/money-detail-dialogs";
@@ -199,108 +203,113 @@ export function MoneyPage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader section="Money" />
 
-          <section
-            className="mt-12 mb-8 lg:mt-18 lg:pl-32"
-            aria-labelledby="money-title"
-          >
-            <div>
-              <p className="mb-3 flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-money-accent uppercase">
-                <CircleDollarSignIcon className="size-4" /> Household clarity
-              </p>
-              <h1
-                id="money-title"
-                className="text-[clamp(2.25rem,8vw,3.35rem)] leading-[1.02] font-normal tracking-[-0.025em] sm:text-[clamp(2.6rem,4.4vw,3.35rem)]"
-              >
-                Money
-              </h1>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                What’s available, what’s already spoken for, and what moves
-                next.
-              </p>
-            </div>
-          </section>
+          <ModulePageContent>
+            <section className="mb-8" aria-labelledby="money-title">
+              <div>
+                <p className="mb-3 flex items-center gap-2 text-xs font-medium tracking-[0.14em] text-money-accent uppercase">
+                  <CircleDollarSignIcon className="size-4" /> Household clarity
+                </p>
+                <h1
+                  id="money-title"
+                  className="text-[clamp(2.25rem,8vw,3.35rem)] leading-[1.02] font-normal tracking-[-0.025em] sm:text-[clamp(2.6rem,4.4vw,3.35rem)]"
+                >
+                  Money
+                </h1>
+                <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                  What’s available, what’s already spoken for, and what moves
+                  next.
+                </p>
+              </div>
+            </section>
 
-          <Tabs
-            value={section}
-            onValueChange={(value) => setSection(value as MoneySection)}
-          >
-            <div className="mb-6 overflow-x-auto border-b border-border/70 pb-1 lg:ml-32">
-              <TabsList variant="line" className="h-10 min-w-max gap-5">
-                {sections.map((value) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="px-0 pb-3 font-normal"
-                  >
-                    {value[0]?.toUpperCase()}
-                    {value.slice(1)}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-
-            <div id="money-content" className="scroll-mt-6 pb-16 lg:pl-32">
-              {moneyQuery.isPending ? <MoneyLoading /> : null}
-              {moneyQuery.isError && !dashboard ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Money could not be loaded</AlertTitle>
-                  <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-                    <span>
-                      {moneyQuery.error instanceof Error
-                        ? moneyQuery.error.message
-                        : "Try again in a moment."}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void moneyQuery.refetch()}
+            <Tabs
+              value={section}
+              onValueChange={(value) => setSection(value as MoneySection)}
+            >
+              <div className="mb-6 overflow-x-auto border-b border-border/70 pb-1">
+                <TabsList variant="line" className="h-10 min-w-max gap-5">
+                  {sections.map((value) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="px-0 pb-3 font-normal"
                     >
-                      Try again
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              {dashboard ? (
-                <>
-                  <TabsContent value="overview">
-                    <MoneyOverview
-                      dashboard={dashboard}
-                      onNavigate={navigate}
-                      onOpenAccount={() => setEditor({ kind: "account" })}
-                      onOpenCalculation={() => setCalculationOpen(true)}
-                      onOpenRecurring={() => setEditor({ kind: "recurring" })}
-                      onOpenSettings={() => setSettingsOpen(true)}
-                    />
-                  </TabsContent>
-                  <TabsContent value="accounts">
-                    <AccountsSection dashboard={dashboard} onEdit={setEditor} />
-                  </TabsContent>
-                  <TabsContent value="recurring">
-                    <RecurringSection
-                      dashboard={dashboard}
-                      onEdit={setEditor}
-                    />
-                  </TabsContent>
-                  <TabsContent value="activity">
-                    <ActivitySection dashboard={dashboard} onEdit={setEditor} />
-                  </TabsContent>
-                  <TabsContent value="goals">
-                    <GoalsSection dashboard={dashboard} onEdit={setEditor} />
-                  </TabsContent>
-                  <TabsContent value="decisions">
-                    <DecisionsSection
-                      dashboard={dashboard}
-                      onEdit={setEditor}
-                    />
-                  </TabsContent>
-                </>
-              ) : null}
-            </div>
-          </Tabs>
-        </div>
+                      {value[0]?.toUpperCase()}
+                      {value.slice(1)}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              <div id="money-content" className="scroll-mt-6 pb-16">
+                {moneyQuery.isPending ? <MoneyLoading /> : null}
+                {moneyQuery.isError && !dashboard ? (
+                  <Alert variant="destructive">
+                    <AlertTitle>Money could not be loaded</AlertTitle>
+                    <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                      <span>
+                        {moneyQuery.error instanceof Error
+                          ? moneyQuery.error.message
+                          : "Try again in a moment."}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void moneyQuery.refetch()}
+                      >
+                        Try again
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                {dashboard ? (
+                  <>
+                    <TabsContent value="overview">
+                      <MoneyOverview
+                        dashboard={dashboard}
+                        onNavigate={navigate}
+                        onOpenAccount={() => setEditor({ kind: "account" })}
+                        onOpenCalculation={() => setCalculationOpen(true)}
+                        onOpenRecurring={() => setEditor({ kind: "recurring" })}
+                        onOpenSettings={() => setSettingsOpen(true)}
+                      />
+                    </TabsContent>
+                    <TabsContent value="accounts">
+                      <AccountsSection
+                        dashboard={dashboard}
+                        onEdit={setEditor}
+                      />
+                    </TabsContent>
+                    <TabsContent value="recurring">
+                      <RecurringSection
+                        dashboard={dashboard}
+                        onEdit={setEditor}
+                      />
+                    </TabsContent>
+                    <TabsContent value="activity">
+                      <ActivitySection
+                        dashboard={dashboard}
+                        onEdit={setEditor}
+                      />
+                    </TabsContent>
+                    <TabsContent value="goals">
+                      <GoalsSection dashboard={dashboard} onEdit={setEditor} />
+                    </TabsContent>
+                    <TabsContent value="decisions">
+                      <DecisionsSection
+                        dashboard={dashboard}
+                        onEdit={setEditor}
+                      />
+                    </TabsContent>
+                  </>
+                ) : null}
+              </div>
+            </Tabs>
+          </ModulePageContent>
+        </ModulePageContainer>
 
         <motion.div
           className="fixed right-4 bottom-4 sm:right-6 sm:bottom-6"

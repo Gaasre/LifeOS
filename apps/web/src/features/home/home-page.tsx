@@ -14,6 +14,10 @@ import { motion, MotionConfig, type Variants } from "motion/react";
 
 import { AppHeader } from "@/components/app-header";
 import { ModuleCard } from "@/components/module-card";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 import { usePerspective } from "@/features/perspectives/perspective-context";
 
 const hubVariants: Variants = {
@@ -121,40 +125,39 @@ export function HomePage() {
         animate="visible"
         variants={hubVariants}
       >
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader />
 
-          <section
-            className="mt-12 mb-8 min-w-0 lg:mt-22"
-            aria-labelledby="home-title"
-          >
-            <h1
-              id="home-title"
-              className="m-0 text-[clamp(2rem,10vw,2.65rem)] leading-[1.08] font-normal tracking-normal sm:text-[clamp(2rem,2.7vw,2.65rem)]"
-            >
-              Life, organized.
-            </h1>
-            <p className="mt-2.5 mb-0 max-w-full text-[clamp(1.05rem,4.8vw,1.25rem)] leading-snug text-muted-foreground sm:text-[clamp(1.05rem,1.4vw,1.25rem)]">
-              Documents, people, places, plans.
-            </p>
-          </section>
+          <ModulePageContent>
+            <section className="mb-8 min-w-0" aria-labelledby="home-title">
+              <h1
+                id="home-title"
+                className="m-0 text-[clamp(2rem,10vw,2.65rem)] leading-[1.08] font-normal tracking-normal sm:text-[clamp(2rem,2.7vw,2.65rem)]"
+              >
+                Life, organized.
+              </h1>
+              <p className="mt-2.5 mb-0 max-w-full text-[clamp(1.05rem,4.8vw,1.25rem)] leading-snug text-muted-foreground sm:text-[clamp(1.05rem,1.4vw,1.25rem)]">
+                Documents, people, places, plans.
+              </p>
+            </section>
 
-          <motion.section
-            className="grid grid-cols-12 gap-4"
-            aria-label="LifeOS modules"
-            variants={moduleGridVariants}
-          >
-            {modules.map((module) => (
-              <ModuleCard
-                key={module.title}
-                {...module}
-                {...(module.title === "Me"
-                  ? { href: personalProfileHref }
-                  : {})}
-              />
-            ))}
-          </motion.section>
-        </div>
+            <motion.section
+              className="grid grid-cols-12 gap-4"
+              aria-label="LifeOS modules"
+              variants={moduleGridVariants}
+            >
+              {modules.map((module) => (
+                <ModuleCard
+                  key={module.title}
+                  {...module}
+                  {...(module.title === "Me"
+                    ? { href: personalProfileHref }
+                    : {})}
+                />
+              ))}
+            </motion.section>
+          </ModulePageContent>
+        </ModulePageContainer>
       </motion.main>
     </MotionConfig>
   );

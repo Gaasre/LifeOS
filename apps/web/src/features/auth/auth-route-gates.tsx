@@ -7,6 +7,7 @@ import { Spinner } from "@lifeos/ui/components/spinner";
 import { LifeOsMark } from "@/components/lifeos-mark";
 import { authClient } from "@/lib/auth-client";
 import { PerspectiveProvider } from "@/features/perspectives/perspective-context";
+import { AssistantRoot } from "@/features/assistant/assistant-root";
 
 function SessionLoading() {
   return (
@@ -62,6 +63,7 @@ export function ProtectedRoute() {
 
   return (
     <PerspectiveProvider>
+      <AssistantRoot />
       <Outlet />
     </PerspectiveProvider>
   );

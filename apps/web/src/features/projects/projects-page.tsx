@@ -29,6 +29,10 @@ import {
 
 import { AppHeader } from "@/components/app-header";
 import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
+import {
   DocumentPickerDialog,
   type DocumentPickerChoice,
 } from "@/features/projects/components/document-picker-dialog";
@@ -276,10 +280,10 @@ export function ProjectsPage() {
   return (
     <MotionConfig reducedMotion="user">
       <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader section="Projects" />
 
-          <div className="mt-12 flex min-w-0 flex-col gap-8 lg:mt-18 lg:pl-32">
+          <ModulePageContent className="flex flex-col gap-8">
             <motion.section
               className="flex min-w-0 flex-col gap-2"
               aria-labelledby="projects-title"
@@ -511,8 +515,8 @@ export function ProjectsPage() {
                 </AnimatePresence>
               </motion.div>
             </motion.section>
-          </div>
-        </div>
+          </ModulePageContent>
+        </ModulePageContainer>
 
         <motion.div
           className="fixed right-4 bottom-4 sm:right-6 sm:bottom-6"

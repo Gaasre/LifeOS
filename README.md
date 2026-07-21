@@ -116,6 +116,10 @@ with the same high-entropy value. Generate one with:
 openssl rand -base64 32
 ```
 
+Set `GEMINI_API_KEY` in `apps/api/.env` to enable the embedded LifeOS
+assistant. It defaults to `gemini-3.1-flash-lite`; override `GEMINI_MODEL` if
+you want to test another Gemini function-calling model.
+
 LifeOS expects PostgreSQL at
 `postgresql://postgres:test@127.0.0.1:5432/lifeos`. If PostgreSQL is not
 already running locally, start the included container:

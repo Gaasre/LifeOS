@@ -1,10 +1,18 @@
 import "dotenv/config";
 
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { db, people, schema } from "@lifeos/db";
+import {
+  db,
+  entities,
+  member,
+  moneySettings,
+  organization as organizationTable,
+  people,
+  schema,
+} from "@lifeos/db";
 import { betterAuth } from "better-auth/minimal";
 import { organization } from "better-auth/plugins/organization";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { familyAccess, familyRoles } from "./family-access";
 
@@ -25,6 +33,130 @@ function getTrustedOrigins() {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+function parseOrganizationMetadata(value: string | null) {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function isPersonalWorkspace(metadata: string | null) {
+  return parseOrganizationMetadata(metadata).kind === "personal";
+}
+
+async function mergePersonalWorkspace(
+  userId: string,
+  targetOrganizationId: string,
+) {
+  const memberships = await db
+    .select({
+      organizationId: member.organizationId,
+      metadata: organizationTable.metadata,
+    })
+    .from(member)
+    .innerJoin(
+      organizationTable,
+      eq(member.organizationId, organizationTable.id),
+    )
+    .where(
+      and(
+        eq(member.userId, userId),
+        ne(member.organizationId, targetOrganizationId),
+      ),
+    );
+  const personalWorkspace = memberships.find((membership) =>
+    isPersonalWorkspace(membership.metadata),
+  );
+
+  await db.transaction(async (transaction) => {
+    const [targetOrganization] = await transaction
+      .select({ metadata: organizationTable.metadata })
+      .from(organizationTable)
+      .where(eq(organizationTable.id, targetOrganizationId))
+      .limit(1);
+
+    if (targetOrganization) {
+      await transaction
+        .update(organizationTable)
+        .set({
+          metadata: JSON.stringify({
+            ...parseOrganizationMetadata(targetOrganization.metadata),
+            kind: "family",
+          }),
+        })
+        .where(eq(organizationTable.id, targetOrganizationId));
+    }
+
+    if (!personalWorkspace) return;
+
+    const sourceOrganizationId = personalWorkspace.organizationId;
+    const [targetSettings] = await transaction
+      .select({ organizationId: moneySettings.organizationId })
+      .from(moneySettings)
+      .where(eq(moneySettings.organizationId, targetOrganizationId))
+      .limit(1);
+
+    if (targetSettings) {
+      await transaction
+        .delete(moneySettings)
+        .where(eq(moneySettings.organizationId, sourceOrganizationId));
+    } else {
+      await transaction
+        .update(moneySettings)
+        .set({ organizationId: targetOrganizationId })
+        .where(eq(moneySettings.organizationId, sourceOrganizationId));
+    }
+
+    const [sourcePerson, targetPerson] = await Promise.all([
+      transaction
+        .select({ id: people.id })
+        .from(people)
+        .where(
+          and(
+            eq(people.organizationId, sourceOrganizationId),
+            eq(people.userId, userId),
+          ),
+        )
+        .limit(1)
+        .then((rows) => rows[0]),
+      transaction
+        .select({ id: people.id })
+        .from(people)
+        .where(
+          and(
+            eq(people.organizationId, targetOrganizationId),
+            eq(people.userId, userId),
+          ),
+        )
+        .limit(1)
+        .then((rows) => rows[0]),
+    ]);
+
+    if (sourcePerson && targetPerson) {
+      // The target row can only be the just-in-time shell created from the new
+      // membership. Keep the personal row so its profile and linked data move.
+      await transaction.delete(people).where(eq(people.id, targetPerson.id));
+    }
+
+    await transaction
+      .update(entities)
+      .set({ organizationId: targetOrganizationId })
+      .where(eq(entities.organizationId, sourceOrganizationId));
+    await transaction
+      .update(people)
+      .set({ organizationId: targetOrganizationId, updatedAt: new Date() })
+      .where(eq(people.organizationId, sourceOrganizationId));
+    await transaction
+      .delete(organizationTable)
+      .where(eq(organizationTable.id, sourceOrganizationId));
+  });
 }
 
 export const trustedOrigins = getTrustedOrigins();
@@ -78,6 +210,18 @@ export const auth = betterAuth({
             .onConflictDoNothing();
         },
         afterAddMember: async ({ member, user, organization }) => {
+          await db
+            .insert(people)
+            .values({
+              organizationId: organization.id,
+              userId: user.id,
+              preferredName: user.name,
+              avatarUrl: user.image,
+            })
+            .onConflictDoNothing();
+        },
+        afterAcceptInvitation: async ({ user, organization }) => {
+          await mergePersonalWorkspace(user.id, organization.id);
           await db
             .insert(people)
             .values({

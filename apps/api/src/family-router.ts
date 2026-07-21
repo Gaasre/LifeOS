@@ -36,7 +36,7 @@ import {
 } from "@lifeos/rpc";
 import { implement, ORPCError } from "@orpc/server";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import { createDocumentsRouter } from "./document-router";
 import { createFitnessRouter } from "./fitness-router";
@@ -53,6 +53,57 @@ type AuthorizedContext = RpcContext & {
 
 const os = implement(lifeOsContract).$context<RpcContext>();
 
+const personalWorkspaceProvisioning = new Map<string, Promise<void>>();
+
+function personalWorkspaceSlug(userId: string) {
+  const suffix = createHash("sha256").update(userId).digest("hex").slice(0, 24);
+  return `personal-${suffix}`;
+}
+
+async function ensurePersonalWorkspace(session: AuthSession, headers: Headers) {
+  if (await getHouseholdMembership(session.user.id)) return;
+
+  const inFlight = personalWorkspaceProvisioning.get(session.user.id);
+  if (inFlight) {
+    await inFlight;
+    return;
+  }
+
+  const provisioning = (async () => {
+    if (await getHouseholdMembership(session.user.id)) return;
+
+    try {
+      await auth.api.createOrganization({
+        headers,
+        body: {
+          name: `${session.user.name}'s LifeOS`,
+          slug: personalWorkspaceSlug(session.user.id),
+          metadata: { kind: "personal" },
+        },
+      });
+    } catch (error) {
+      // A second API process may have provisioned the same deterministic
+      // workspace between our membership check and the create call.
+      if (!(await getHouseholdMembership(session.user.id))) throw error;
+    }
+  })();
+
+  personalWorkspaceProvisioning.set(session.user.id, provisioning);
+  try {
+    await provisioning;
+  } finally {
+    if (personalWorkspaceProvisioning.get(session.user.id) === provisioning) {
+      personalWorkspaceProvisioning.delete(session.user.id);
+    }
+  }
+
+  if (!(await getHouseholdMembership(session.user.id))) {
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: "Your personal workspace could not be prepared.",
+    });
+  }
+}
+
 const requireAuth = os.middleware(async ({ context, next }) => {
   const session = await auth.api.getSession({ headers: context.headers });
 
@@ -61,6 +112,8 @@ const requireAuth = os.middleware(async ({ context, next }) => {
       message: "Sign in to continue.",
     });
   }
+
+  await ensurePersonalWorkspace(session, context.headers);
 
   return next({ context: { auth: session } });
 });

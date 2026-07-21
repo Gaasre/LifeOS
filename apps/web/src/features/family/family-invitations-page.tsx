@@ -35,6 +35,10 @@ import { Skeleton } from "@lifeos/ui/components/skeleton";
 import { Spinner } from "@lifeos/ui/components/spinner";
 
 import { AppHeader } from "@/components/app-header";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 import { authClient } from "@/lib/auth-client";
 import { rpcClient } from "@/lib/rpc-client";
 
@@ -131,10 +135,10 @@ export function FamilyInvitationsPage() {
 
   return (
     <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="mx-auto w-full max-w-[72rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <ModulePageContainer>
         <AppHeader section="Invitations" />
 
-        <div className="mt-12 flex flex-col gap-8 lg:mt-16">
+        <ModulePageContent className="flex flex-col gap-8">
           <section className="max-w-2xl">
             <div className="mb-4 inline-flex rounded-2xl border bg-muted/30 p-3">
               <InboxIcon className="size-6" />
@@ -257,8 +261,8 @@ export function FamilyInvitationsPage() {
               })}
             </div>
           )}
-        </div>
-      </div>
+        </ModulePageContent>
+      </ModulePageContainer>
     </main>
   );
 }

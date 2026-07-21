@@ -5,6 +5,10 @@ import { useSearchParams } from "react-router-dom";
 import type { Filter } from "@lifeos/ui/components/reui/filters";
 
 import { AppHeader } from "@/components/app-header";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 import { AddDocumentDialog } from "@/features/documents/components/add-document-dialog";
 import { AttentionPanel } from "@/features/documents/components/attention-panel";
 import { DocumentDetailSheet } from "@/features/documents/components/document-detail-sheet";
@@ -132,10 +136,10 @@ export function DocumentsPage() {
   return (
     <MotionConfig reducedMotion="user">
       <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-        <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <ModulePageContainer>
           <AppHeader section="Documents" />
 
-          <div className="mt-12 flex min-w-0 flex-col gap-9 lg:mt-18 lg:pl-32">
+          <ModulePageContent className="flex flex-col gap-9">
             <section
               className="documents-section-enter flex min-w-0 flex-col gap-6 md:flex-row md:items-end md:justify-between"
               style={{ animationDelay: "20ms" }}
@@ -219,8 +223,8 @@ export function DocumentsPage() {
                 onRetry={() => void documentsQuery.refetch()}
               />
             </motion.section>
-          </div>
-        </div>
+          </ModulePageContent>
+        </ModulePageContainer>
 
         <DocumentDetailSheet
           document={selectedDocument}

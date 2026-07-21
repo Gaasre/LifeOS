@@ -87,7 +87,9 @@ export function PerspectiveProvider({ children }: { children: ReactNode }) {
   }, [location.pathname, people, viewerPersonId]);
 
   const validStoredPerspective = useMemo<LifePerspective | null>(() => {
-    if (storedPerspective?.kind === "family") return storedPerspective;
+    if (storedPerspective?.kind === "family") {
+      return people.length > 1 ? storedPerspective : null;
+    }
     if (
       storedPerspective?.kind === "person" &&
       people.some((person) => person.id === storedPerspective.personId)

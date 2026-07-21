@@ -19,15 +19,24 @@ import {
   LandmarkIcon,
   MapPinIcon,
   PencilIcon,
+  PlaneIcon,
   PlusIcon,
   Repeat2Icon,
   ShieldCheckIcon,
+  ShirtIcon,
   SparklesIcon,
   StampIcon,
   TagIcon,
   UserRoundIcon,
+  UtensilsCrossedIcon,
   type LucideIcon,
 } from "lucide-react";
+import {
+  motion,
+  MotionConfig,
+  type Transition,
+  type Variants,
+} from "motion/react";
 import { Link, useParams } from "react-router-dom";
 
 import type {
@@ -88,6 +97,10 @@ import { cn } from "@lifeos/ui/lib/utils";
 
 import { AppHeader } from "@/components/app-header";
 import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
+import {
   usefulFactFields,
   type UsefulFactField,
 } from "@/features/me/me-config";
@@ -131,13 +144,64 @@ type MeTab = (typeof tabItems)[number]["value"];
 type MeEditor = "profile" | "record" | "fact" | "date";
 type UsefulFactKey = UsefulFactField["key"];
 
+const meEase = [0.22, 1, 0.36, 1] as const;
+const meSpring: Transition = {
+  type: "spring",
+  stiffness: 340,
+  damping: 30,
+  mass: 0.72,
+};
+
+const mePageVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.28, ease: meEase },
+  },
+};
+
+const meViewVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.32,
+      ease: meEase,
+      delayChildren: 0.025,
+      staggerChildren: 0.055,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -5,
+    transition: { duration: 0.16, ease: meEase },
+  },
+};
+
+const meStaggerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { delayChildren: 0.02, staggerChildren: 0.05 },
+  },
+};
+
+const meRiseVariants: Variants = {
+  hidden: { opacity: 0, y: 12, scale: 0.994 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.38, ease: meEase },
+  },
+};
+
 const factGroups = [
   {
     id: "fit",
+    icon: ShirtIcon,
     title: "Fit & style",
     description: "The sizing details that make shopping simpler.",
-    image: "/images/me/fit-shelf-v4.png",
-    imagePosition: "object-center",
     keys: [
       "height",
       "ring_size",
@@ -148,10 +212,9 @@ const factGroups = [
   },
   {
     id: "travel",
+    icon: PlaneIcon,
     title: "Travel defaults",
     description: "The choices you make before every trip.",
-    image: "/images/me/travel-shelf-v4.png",
-    imagePosition: "object-center",
     keys: [
       "home_airport",
       "preferred_currency",
@@ -160,10 +223,9 @@ const factGroups = [
   },
   {
     id: "everyday",
+    icon: UtensilsCrossedIcon,
     title: "Food & language",
     description: "Preferences that help everyday plans feel personal.",
-    image: "/images/me/everyday-shelf-v3.png",
-    imagePosition: "object-center",
     keys: ["food_restrictions", "preferred_language"] satisfies UsefulFactKey[],
   },
 ] as const;
@@ -240,7 +302,7 @@ function daysFromToday(value: string, today: string) {
 
 function PersonLoading() {
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <Skeleton className="h-14 w-full rounded-none" />
       <Skeleton className="h-[46rem] rounded-2xl" />
     </div>
@@ -261,7 +323,10 @@ function SectionHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
+    <motion.div
+      className="flex flex-wrap items-end justify-between gap-4"
+      variants={meRiseVariants}
+    >
       <div className="flex min-w-0 items-start gap-3">
         <Badge
           variant="secondary"
@@ -280,7 +345,7 @@ function SectionHeading({
         </div>
       </div>
       {action}
-    </div>
+    </motion.div>
   );
 }
 
@@ -294,29 +359,40 @@ function OverviewHero({
   const { profile } = dashboard;
 
   return (
-    <header
-      className="relative isolate min-h-[17rem] overflow-hidden border-b border-border/70 bg-card/20 sm:min-h-[14rem]"
+    <motion.header
+      className="group/profile-hero relative isolate min-h-[17rem] overflow-hidden border-b border-border/70 bg-card/20 sm:min-h-[14rem]"
       aria-labelledby="person-name"
+      variants={meRiseVariants}
     >
       <img
         src="/images/me/profile-horizon-v1.jpg"
         alt=""
-        className="absolute inset-y-0 right-[4%] h-full w-auto max-w-none object-contain opacity-45 sm:opacity-70"
+        className="absolute inset-0 size-full object-cover object-center opacity-45 transition-transform duration-1000 ease-out group-hover/profile-hero:scale-[1.015] motion-reduce:transition-none sm:opacity-70"
         aria-hidden="true"
       />
-      <div className="relative z-10 flex min-h-[17rem] flex-col justify-center gap-5 px-6 py-8 sm:min-h-[14rem] sm:flex-row sm:items-center sm:justify-start sm:gap-9 sm:px-8 lg:px-9">
-        <Avatar className="size-24 shrink-0 rounded-2xl border border-money-accent/70 bg-background/80 ring-1 ring-money-accent/15 sm:size-32">
-          <AvatarImage
-            src={profile.avatarUrl ?? undefined}
-            alt={profile.preferredName}
-            className="rounded-2xl object-cover"
-          />
-          <AvatarFallback className="rounded-2xl bg-background/70 font-heading text-4xl text-money-accent sm:text-5xl">
-            {initials(profile.preferredName)}
-          </AvatarFallback>
-        </Avatar>
+      <motion.div
+        className="relative z-10 flex min-h-[17rem] flex-col justify-center gap-5 px-6 py-8 sm:min-h-[14rem] sm:flex-row sm:items-center sm:justify-start sm:gap-9 sm:px-8 lg:px-9"
+        variants={meStaggerVariants}
+      >
+        <motion.div
+          className="w-fit shrink-0"
+          variants={meRiseVariants}
+          whileHover={{ y: -2, scale: 1.015 }}
+          transition={meSpring}
+        >
+          <Avatar className="size-24 rounded-2xl border border-money-accent/70 bg-background/80 ring-1 ring-money-accent/15 after:hidden sm:size-32">
+            <AvatarImage
+              src={profile.avatarUrl ?? undefined}
+              alt={profile.preferredName}
+              className="rounded-2xl object-cover"
+            />
+            <AvatarFallback className="rounded-2xl bg-background/70 font-heading text-4xl text-money-accent sm:text-5xl">
+              {initials(profile.preferredName)}
+            </AvatarFallback>
+          </Avatar>
+        </motion.div>
 
-        <div className="min-w-0 max-w-xl">
+        <motion.div className="min-w-0 max-w-xl" variants={meRiseVariants}>
           <h1
             id="person-name"
             className="text-balance font-heading text-[clamp(2.25rem,4vw,3rem)] leading-[1.02] font-medium tracking-[-0.025em]"
@@ -326,22 +402,29 @@ function OverviewHero({
           <p className="mt-2 text-sm leading-relaxed text-foreground/65 sm:text-base">
             Your personal details, ready when you need them.
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-4 border-money-accent/45 bg-background/55 hover:bg-money-accent/10"
-            onClick={onEdit}
+          <motion.div
+            className="mt-4 w-fit"
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            transition={meSpring}
           >
-            <PencilIcon
-              className="text-money-accent"
-              data-icon="inline-start"
-            />
-            Edit profile
-          </Button>
-        </div>
-      </div>
-    </header>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-money-accent/45 bg-background/55 hover:bg-money-accent/10"
+              onClick={onEdit}
+            >
+              <PencilIcon
+                className="text-money-accent"
+                data-icon="inline-start"
+              />
+              Edit profile
+            </Button>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </motion.header>
   );
 }
 
@@ -368,7 +451,12 @@ function ProfileDetailRow({
   const hasValue = Boolean(value?.trim());
 
   return (
-    <div className="grid min-h-14 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5">
+    <motion.div
+      className="grid min-h-14 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+      variants={meRiseVariants}
+      whileHover={{ x: 2 }}
+      transition={meSpring}
+    >
       <Icon className="size-[1.15rem] text-foreground/85" aria-hidden="true" />
       <dt className="min-w-0 truncate text-sm text-muted-foreground sm:text-base">
         {label}
@@ -382,7 +470,7 @@ function ProfileDetailRow({
       >
         {hasValue ? value : "Add"}
       </dd>
-    </div>
+    </motion.div>
   );
 }
 
@@ -411,7 +499,12 @@ function QuickReferenceRow({
   const Icon = preset.icon;
 
   return (
-    <div className="grid min-h-14 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5">
+    <motion.div
+      className="grid min-h-14 grid-cols-[1.75rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+      variants={meRiseVariants}
+      whileHover={{ x: 2 }}
+      transition={meSpring}
+    >
       <Icon className="size-[1.15rem] text-foreground/85" aria-hidden="true" />
       <span className="min-w-0 truncate text-sm text-muted-foreground sm:text-base">
         {item.label}
@@ -436,7 +529,7 @@ function QuickReferenceRow({
           </Button>
         }
       />
-    </div>
+    </motion.div>
   );
 }
 
@@ -479,7 +572,10 @@ function OverviewNextUp({
   );
 
   return (
-    <div className="grid min-h-28 gap-5 border-t border-border/70 px-6 py-5 sm:px-8 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,2fr)_auto] md:items-center lg:px-9">
+    <motion.div
+      className="grid min-h-28 gap-5 border-t border-border/70 px-6 py-5 sm:px-8 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,2fr)_auto] md:items-center lg:px-9"
+      variants={meRiseVariants}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <Badge
           variant="outline"
@@ -525,7 +621,7 @@ function OverviewNextUp({
         <PlusIcon data-icon="inline-start" />
         Add date
       </Button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -568,9 +664,10 @@ function OverviewSection({
   }>;
 
   return (
-    <section
+    <motion.section
       aria-labelledby="overview-title"
       className="my-5 w-full overflow-hidden rounded-2xl border border-border/70 bg-card/15 shadow-[0_24px_80px_-64px_rgb(0_0_0_/_0.95)]"
+      variants={meStaggerVariants}
     >
       <h2 id="overview-title" className="sr-only">
         Overview
@@ -578,25 +675,34 @@ function OverviewSection({
 
       <OverviewHero dashboard={dashboard} onEdit={onEdit} />
 
-      <div className="grid gap-10 px-6 py-7 sm:px-8 md:grid-cols-2 md:gap-14 lg:px-9 lg:py-8 xl:gap-20">
-        <div className="min-w-0">
+      <motion.div
+        className="grid gap-10 px-6 py-7 sm:px-8 md:grid-cols-2 md:gap-14 lg:px-9 lg:py-8 xl:gap-20"
+        variants={meStaggerVariants}
+      >
+        <motion.div className="min-w-0" variants={meRiseVariants}>
           <div className="mb-3 flex items-center gap-3">
             <UserRoundIcon className="size-5" aria-hidden="true" />
             <h3 className="font-heading text-xl">About you</h3>
           </div>
-          <dl className="divide-y divide-border/70">
+          <motion.dl
+            className="divide-y divide-border/70"
+            variants={meStaggerVariants}
+          >
             {aboutRows.map((row) => (
               <ProfileDetailRow key={row.label} {...row} />
             ))}
-          </dl>
-        </div>
+          </motion.dl>
+        </motion.div>
 
-        <div className="min-w-0">
+        <motion.div className="min-w-0" variants={meRiseVariants}>
           <div className="mb-3 flex items-center gap-3">
             <BookmarkIcon className="size-5" aria-hidden="true" />
             <h3 className="font-heading text-xl">Quick reference</h3>
           </div>
-          <div className="divide-y divide-border/70">
+          <motion.div
+            className="divide-y divide-border/70"
+            variants={meStaggerVariants}
+          >
             {overviewQuickFacts.map((item) => (
               <QuickReferenceRow
                 key={item.key}
@@ -606,16 +712,16 @@ function OverviewSection({
                 onChanged={onChanged}
               />
             ))}
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
 
       <OverviewNextUp
         dashboard={dashboard}
         onChanged={onChanged}
         onAdd={onAddDate}
       />
-    </section>
+    </motion.section>
   );
 }
 
@@ -663,153 +769,161 @@ function OfficialRecordCard({
   const StatusIcon = recordStatusIcon(record);
 
   return (
-    <Card className="min-h-80 bg-card/45">
-      <CardHeader className="relative isolate min-h-32 justify-end overflow-hidden pt-14">
-        <img
-          src="/images/documents.jpg"
-          alt=""
-          className="absolute inset-0 size-full object-cover object-[70%_center] opacity-70"
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/85 to-card/20" />
-        <div className="relative flex min-w-0 items-center gap-3">
-          <Badge
-            variant="secondary"
-            className="size-11 rounded-xl p-0 backdrop-blur-md"
+    <motion.div
+      className="group/official-record h-full"
+      variants={meRiseVariants}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.995 }}
+      transition={meSpring}
+    >
+      <Card className="h-full min-h-80 bg-card/45 transition-shadow duration-300 group-hover/official-record:shadow-xl motion-reduce:transition-none">
+        <CardHeader className="relative isolate min-h-32 justify-end overflow-hidden pt-14">
+          <img
+            src="/images/documents.jpg"
+            alt=""
+            className="absolute inset-0 size-full object-cover object-[70%_center] opacity-70 transition-transform duration-700 ease-out group-hover/official-record:scale-[1.025] motion-reduce:transition-none"
             aria-hidden="true"
-          >
-            <RecordIcon />
-          </Badge>
-          <div className="min-w-0">
-            <CardTitle className="truncate text-xl">
-              {record.recordType}
-            </CardTitle>
-            <CardDescription className="truncate">
-              {record.title !== record.recordType
-                ? record.title
-                : "Official record"}
-            </CardDescription>
-          </div>
-        </div>
-        <CardAction className="relative flex items-center gap-1">
-          <OfficialRecordDialog
-            personId={dashboard.profile.id}
-            record={record}
-            sourceDocuments={dashboard.sourceDocuments}
-            onChanged={onChanged}
-            trigger={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Edit ${record.recordType}`}
-              >
-                <PencilIcon />
-              </Button>
-            }
           />
-          <RemovePersonItemButton
-            personId={dashboard.profile.id}
-            item={{ type: "record", id: record.id }}
-            title={record.recordType}
-            onChanged={onChanged}
-          />
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="flex flex-1 flex-col gap-5">
-        <div className="flex flex-wrap gap-2">
-          <Badge
-            variant={record.status === "expired" ? "destructive" : "outline"}
-          >
-            <StatusIcon data-icon="inline-start" />
-            {recordStatusLabel(record)}
-          </Badge>
-          {record.country ? (
-            <Badge variant="outline">
-              <Globe2Icon data-icon="inline-start" />
-              {record.country}
-            </Badge>
-          ) : null}
-          {record.issuingAuthority ? (
-            <Badge variant="outline">
-              <LandmarkIcon data-icon="inline-start" />
-              {record.issuingAuthority}
-            </Badge>
-          ) : null}
-        </div>
-
-        <div className="rounded-xl border bg-background/25 p-4">
-          <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-            Document number
-          </p>
-          <p
-            className={cn(
-              "mt-2 break-all font-mono text-lg leading-relaxed",
-              !record.identifier && "text-muted-foreground",
-            )}
-          >
-            {record.identifier ?? "No identifier added"}
-          </p>
-        </div>
-
-        {record.issueDate || record.expiryDate ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {record.issueDate ? (
-              <div className="flex items-center gap-3 rounded-xl bg-muted/45 p-3">
-                <CalendarDaysIcon
-                  className="size-5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="text-xs text-muted-foreground">Issued</p>
-                  <p className="mt-0.5 font-medium tabular-nums">
-                    {formatDate(record.issueDate)}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            {record.expiryDate ? (
-              <div className="flex items-center gap-3 rounded-xl bg-muted/45 p-3">
-                <CalendarClockIcon
-                  className="size-5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="text-xs text-muted-foreground">Expires</p>
-                  <p className="mt-0.5 font-medium tabular-nums">
-                    {formatDate(record.expiryDate)}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {sourceDocument || record.sourceDocumentId ? <Separator /> : null}
-
-        {sourceDocument ? (
-          <div className="mt-auto">
-            <p className="text-xs text-muted-foreground">Source document</p>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="mt-1 -ml-2 max-w-full justify-start"
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/85 to-card/20" />
+          <div className="relative flex min-w-0 items-center gap-3">
+            <Badge
+              variant="secondary"
+              className="size-11 rounded-xl p-0 backdrop-blur-md"
+              aria-hidden="true"
             >
-              <Link to={`/documents?document=${sourceDocument.id}`}>
-                <FileTextIcon data-icon="inline-start" />
-                <span className="truncate">{sourceDocument.title}</span>
-              </Link>
-            </Button>
+              <RecordIcon />
+            </Badge>
+            <div className="min-w-0">
+              <CardTitle className="truncate text-xl">
+                {record.recordType}
+              </CardTitle>
+              <CardDescription className="truncate">
+                {record.title !== record.recordType
+                  ? record.title
+                  : "Official record"}
+              </CardDescription>
+            </div>
           </div>
-        ) : record.sourceDocumentId ? (
-          <p className="text-xs text-muted-foreground">
-            The linked source document is unavailable.
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
+          <CardAction className="relative flex items-center gap-1">
+            <OfficialRecordDialog
+              personId={dashboard.profile.id}
+              record={record}
+              sourceDocuments={dashboard.sourceDocuments}
+              onChanged={onChanged}
+              trigger={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Edit ${record.recordType}`}
+                >
+                  <PencilIcon />
+                </Button>
+              }
+            />
+            <RemovePersonItemButton
+              personId={dashboard.profile.id}
+              item={{ type: "record", id: record.id }}
+              title={record.recordType}
+              onChanged={onChanged}
+            />
+          </CardAction>
+        </CardHeader>
+
+        <CardContent className="flex flex-1 flex-col gap-5">
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={record.status === "expired" ? "destructive" : "outline"}
+            >
+              <StatusIcon data-icon="inline-start" />
+              {recordStatusLabel(record)}
+            </Badge>
+            {record.country ? (
+              <Badge variant="outline">
+                <Globe2Icon data-icon="inline-start" />
+                {record.country}
+              </Badge>
+            ) : null}
+            {record.issuingAuthority ? (
+              <Badge variant="outline">
+                <LandmarkIcon data-icon="inline-start" />
+                {record.issuingAuthority}
+              </Badge>
+            ) : null}
+          </div>
+
+          <div className="rounded-xl border bg-background/25 p-4">
+            <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
+              Document number
+            </p>
+            <p
+              className={cn(
+                "mt-2 break-all font-mono text-lg leading-relaxed",
+                !record.identifier && "text-muted-foreground",
+              )}
+            >
+              {record.identifier ?? "No identifier added"}
+            </p>
+          </div>
+
+          {record.issueDate || record.expiryDate ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {record.issueDate ? (
+                <div className="flex items-center gap-3 rounded-xl bg-muted/45 p-3">
+                  <CalendarDaysIcon
+                    className="size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Issued</p>
+                    <p className="mt-0.5 font-medium tabular-nums">
+                      {formatDate(record.issueDate)}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              {record.expiryDate ? (
+                <div className="flex items-center gap-3 rounded-xl bg-muted/45 p-3">
+                  <CalendarClockIcon
+                    className="size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Expires</p>
+                    <p className="mt-0.5 font-medium tabular-nums">
+                      {formatDate(record.expiryDate)}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {sourceDocument || record.sourceDocumentId ? <Separator /> : null}
+
+          {sourceDocument ? (
+            <div className="mt-auto">
+              <p className="text-xs text-muted-foreground">Source document</p>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="mt-1 -ml-2 max-w-full justify-start"
+              >
+                <Link to={`/documents?document=${sourceDocument.id}`}>
+                  <FileTextIcon data-icon="inline-start" />
+                  <span className="truncate">{sourceDocument.title}</span>
+                </Link>
+              </Button>
+            </div>
+          ) : record.sourceDocumentId ? (
+            <p className="text-xs text-muted-foreground">
+              The linked source document is unavailable.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -829,26 +943,33 @@ function ImageEmptyState({
   action: ReactNode;
 }) {
   return (
-    <Empty className="relative isolate min-h-72 overflow-hidden rounded-2xl border bg-card/20">
-      <img
-        src={image}
-        alt=""
-        className={cn(
-          "absolute inset-0 size-full object-cover opacity-65",
-          imagePosition,
-        )}
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-card/98 via-card/90 to-card/35" />
-      <EmptyHeader className="relative">
-        <EmptyMedia variant="icon">
-          <Icon />
-        </EmptyMedia>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent className="relative">{action}</EmptyContent>
-    </Empty>
+    <motion.div
+      className="group/empty-state"
+      variants={meRiseVariants}
+      whileHover={{ y: -2 }}
+      transition={meSpring}
+    >
+      <Empty className="relative isolate min-h-72 overflow-hidden rounded-2xl border bg-card/20">
+        <img
+          src={image}
+          alt=""
+          className={cn(
+            "absolute inset-0 size-full object-cover opacity-65 transition-transform duration-1000 ease-out group-hover/empty-state:scale-[1.015] motion-reduce:transition-none",
+            imagePosition,
+          )}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-card/98 via-card/90 to-card/35" />
+        <EmptyHeader className="relative">
+          <EmptyMedia variant="icon">
+            <Icon />
+          </EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>{description}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent className="relative">{action}</EmptyContent>
+      </Empty>
+    </motion.div>
   );
 }
 
@@ -862,7 +983,11 @@ function OfficialInformationSection({
   onAdd: () => void;
 }) {
   return (
-    <section aria-labelledby="official-title" className="flex flex-col gap-6">
+    <motion.section
+      aria-labelledby="official-title"
+      className="flex flex-col gap-6"
+      variants={meStaggerVariants}
+    >
       <SectionHeading
         id="official-title"
         icon={IdCardIcon}
@@ -876,7 +1001,10 @@ function OfficialInformationSection({
         }
       />
       {dashboard.officialRecords.length > 0 ? (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <motion.div
+          className="grid gap-4 xl:grid-cols-2"
+          variants={meStaggerVariants}
+        >
           {dashboard.officialRecords.map((record) => (
             <OfficialRecordCard
               key={record.id}
@@ -885,10 +1013,10 @@ function OfficialInformationSection({
               onChanged={onChanged}
             />
           ))}
-        </div>
+        </motion.div>
       ) : (
         <ImageEmptyState
-          image="/images/documents.jpg"
+          image="/images/me/official-records-empty-v3.png"
           imagePosition="object-[72%_center]"
           icon={IdCardIcon}
           title="No official records yet"
@@ -901,7 +1029,7 @@ function OfficialInformationSection({
           }
         />
       )}
-    </section>
+    </motion.section>
   );
 }
 
@@ -948,99 +1076,120 @@ function FactGroupCard({
     return fact ? [{ field, fact }] : [];
   });
   const missing = fields.filter((field) => !presetFacts.has(field.key));
+  const GroupIcon = group.icon;
 
   return (
-    <Card size="sm" className="self-start bg-card/40">
-      <img
-        src={group.image}
-        alt=""
-        className={cn(
-          "aspect-[15/4] w-full object-cover opacity-90",
-          group.imagePosition,
-        )}
-        aria-hidden="true"
-      />
-      <CardHeader>
-        <CardTitle className="text-lg group-data-[size=sm]/card:text-base">
-          {group.title}
-        </CardTitle>
-        <CardDescription className="text-xs leading-relaxed">
-          {group.description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {saved.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {saved.map(({ field, fact }) => {
-              const Icon = field.icon;
-              return (
-                <div key={field.key} className="flex items-start gap-3">
-                  <Badge
-                    variant="secondary"
-                    className="size-9 rounded-xl p-0"
-                    aria-hidden="true"
-                  >
-                    <Icon />
-                  </Badge>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">
-                      {field.label}
-                    </p>
-                    <p className="mt-1 leading-relaxed font-medium whitespace-pre-wrap">
-                      {fact.value}
-                    </p>
-                  </div>
-                  <PersonFactDialog
-                    personId={personId}
-                    fact={fact}
-                    preset={field}
-                    onChanged={onChanged}
-                    trigger={
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Edit ${field.label}`}
-                      >
-                        <PencilIcon />
-                      </Button>
-                    }
-                  />
-                </div>
-              );
-            })}
+    <motion.div
+      className="group/fact-card h-full"
+      variants={meRiseVariants}
+      whileHover={{ y: -3 }}
+      transition={meSpring}
+    >
+      <Card className="h-full transition-shadow duration-300 group-hover/fact-card:shadow-lg motion-reduce:transition-none">
+        <CardHeader>
+          <div className="flex min-w-0 items-start gap-3">
+            <Badge
+              variant="secondary"
+              className="size-10 shrink-0 rounded-xl p-0"
+              aria-hidden="true"
+            >
+              <GroupIcon />
+            </Badge>
+            <div className="min-w-0">
+              <CardTitle>{group.title}</CardTitle>
+              <CardDescription className="mt-1 leading-relaxed">
+                {group.description}
+              </CardDescription>
+            </div>
           </div>
-        ) : null}
-
-        {missing.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {saved.length > 0 ? <Separator /> : null}
-            <p className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
-              Quick add
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {missing.map((field) => {
+          <CardAction>
+            <Badge variant="outline">
+              {saved.length}/{fields.length} added
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="flex flex-1 flex-col gap-4">
+          {saved.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {saved.map(({ field, fact }) => {
                 const Icon = field.icon;
                 return (
-                  <PersonFactDialog
-                    key={field.key}
-                    personId={personId}
-                    preset={field}
-                    onChanged={onChanged}
-                    trigger={
-                      <Button type="button" variant="outline" size="sm">
-                        <Icon data-icon="inline-start" />
+                  <div key={field.key} className="flex items-start gap-3">
+                    <Badge
+                      variant="secondary"
+                      className="size-9 rounded-xl p-0"
+                      aria-hidden="true"
+                    >
+                      <Icon />
+                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">
                         {field.label}
-                      </Button>
-                    }
-                  />
+                      </p>
+                      <p className="mt-1 leading-relaxed font-medium whitespace-pre-wrap">
+                        {fact.value}
+                      </p>
+                    </div>
+                    <PersonFactDialog
+                      personId={personId}
+                      fact={fact}
+                      preset={field}
+                      onChanged={onChanged}
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Edit ${field.label}`}
+                        >
+                          <PencilIcon />
+                        </Button>
+                      }
+                    />
+                  </div>
                 );
               })}
             </div>
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
+          ) : null}
+
+          {missing.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {saved.length > 0 ? <Separator /> : null}
+              <p className="text-sm font-medium">
+                {saved.length > 0 ? "Add another detail" : "Choose what to add"}
+              </p>
+              <div className="grid gap-1.5 2xl:grid-cols-2">
+                {missing.map((field) => {
+                  const Icon = field.icon;
+                  return (
+                    <PersonFactDialog
+                      key={field.key}
+                      personId={personId}
+                      preset={field}
+                      onChanged={onChanged}
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="w-full min-w-0 justify-start"
+                        >
+                          <Icon data-icon="inline-start" />
+                          <span className="truncate">{field.label}</span>
+                          <PlusIcon
+                            className="ml-auto"
+                            data-icon="inline-end"
+                          />
+                        </Button>
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -1054,46 +1203,56 @@ function CustomFactCard({
   onChanged: () => Promise<void>;
 }) {
   return (
-    <Card size="sm" className="min-h-32 bg-card/40">
-      <CardHeader>
-        <Badge
-          variant="secondary"
-          className="mb-2 size-9 rounded-xl p-0"
-          aria-hidden="true"
-        >
-          <TagIcon />
-        </Badge>
-        <CardTitle>{fact.label}</CardTitle>
-        <CardAction className="flex items-center gap-1">
-          <PersonFactDialog
-            personId={personId}
-            fact={fact}
-            onChanged={onChanged}
-            trigger={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Edit ${fact.label}`}
-              >
-                <PencilIcon />
-              </Button>
-            }
-          />
-          <RemovePersonItemButton
-            personId={personId}
-            item={{ type: "fact", id: fact.id }}
-            title={fact.label}
-            onChanged={onChanged}
-          />
-        </CardAction>
-      </CardHeader>
-      <CardContent className="mt-auto">
-        <p className="text-base leading-relaxed font-medium whitespace-pre-wrap">
-          {fact.value}
-        </p>
-      </CardContent>
-    </Card>
+    <motion.div
+      className="group/custom-fact h-full"
+      variants={meRiseVariants}
+      whileHover={{ y: -3 }}
+      transition={meSpring}
+    >
+      <Card
+        size="sm"
+        className="h-full min-h-32 bg-card/40 transition-shadow duration-300 group-hover/custom-fact:shadow-lg motion-reduce:transition-none"
+      >
+        <CardHeader>
+          <Badge
+            variant="secondary"
+            className="mb-2 size-9 rounded-xl p-0"
+            aria-hidden="true"
+          >
+            <TagIcon />
+          </Badge>
+          <CardTitle>{fact.label}</CardTitle>
+          <CardAction className="flex items-center gap-1">
+            <PersonFactDialog
+              personId={personId}
+              fact={fact}
+              onChanged={onChanged}
+              trigger={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Edit ${fact.label}`}
+                >
+                  <PencilIcon />
+                </Button>
+              }
+            />
+            <RemovePersonItemButton
+              personId={personId}
+              item={{ type: "fact", id: fact.id }}
+              title={fact.label}
+              onChanged={onChanged}
+            />
+          </CardAction>
+        </CardHeader>
+        <CardContent className="mt-auto">
+          <p className="text-base leading-relaxed font-medium whitespace-pre-wrap">
+            {fact.value}
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -1109,7 +1268,11 @@ function UsefulFactsSection({
   const { presetFacts, customFacts } = findUsefulFacts(dashboard.facts);
 
   return (
-    <section aria-labelledby="facts-title" className="flex flex-col gap-6">
+    <motion.section
+      aria-labelledby="facts-title"
+      className="flex flex-col gap-6"
+      variants={meStaggerVariants}
+    >
       <SectionHeading
         id="facts-title"
         icon={SparklesIcon}
@@ -1123,7 +1286,10 @@ function UsefulFactsSection({
         }
       />
 
-      <div className="grid grid-cols-[minmax(0,22rem)] justify-center gap-4 sm:grid-cols-[repeat(2,minmax(0,22rem))] lg:grid-cols-[repeat(3,minmax(0,22rem))]">
+      <motion.div
+        className="mx-auto grid w-full max-w-7xl items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3"
+        variants={meStaggerVariants}
+      >
         {factGroups.map((group) => (
           <FactGroupCard
             key={group.id}
@@ -1133,11 +1299,14 @@ function UsefulFactsSection({
             onChanged={onChanged}
           />
         ))}
-      </div>
+      </motion.div>
 
       {customFacts.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          <div>
+        <motion.div
+          className="flex flex-col gap-4"
+          variants={meStaggerVariants}
+        >
+          <motion.div variants={meRiseVariants}>
             <h3 className="font-heading text-xl">
               {dashboard.profile.isCurrentUser
                 ? "Your own shortcuts"
@@ -1146,8 +1315,11 @@ function UsefulFactsSection({
             <p className="mt-1 text-sm text-muted-foreground">
               Details that do not belong to a standard group.
             </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          </motion.div>
+          <motion.div
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+            variants={meStaggerVariants}
+          >
             {customFacts.map((fact) => (
               <CustomFactCard
                 key={fact.id}
@@ -1156,10 +1328,10 @@ function UsefulFactsSection({
                 onChanged={onChanged}
               />
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       ) : null}
-    </section>
+    </motion.section>
   );
 }
 
@@ -1243,7 +1415,7 @@ function dateVisual(item: ImportantDateItem): {
     return {
       icon: CakeIcon,
       label: "Birthday",
-      image: "/images/memories.jpg",
+      image: "/images/family/coming-up-v2.jpg",
       imagePosition: "object-[65%_center]",
     };
   }
@@ -1251,8 +1423,8 @@ function dateVisual(item: ImportantDateItem): {
     return {
       icon: IdCardIcon,
       label: "Official expiry",
-      image: "/images/documents.jpg",
-      imagePosition: "object-[70%_center]",
+      image: "/images/me/official-records-empty-v3.png",
+      imagePosition: "object-[75%_center]",
     };
   }
   return {
@@ -1278,87 +1450,95 @@ function ImportantDateCard({
   const DateIcon = visual.icon;
 
   return (
-    <Card className="min-h-56 bg-card/45">
-      <CardHeader className="relative isolate min-h-36 justify-end overflow-hidden pt-16">
+    <motion.div
+      className="group/date-card h-full"
+      variants={meRiseVariants}
+      whileHover={{ y: -3 }}
+      transition={meSpring}
+    >
+      <Card className="relative isolate h-full min-h-64 justify-end transition-shadow duration-300 group-hover/date-card:shadow-xl motion-reduce:transition-none">
         <img
           src={visual.image}
           alt=""
           className={cn(
-            "absolute inset-0 size-full object-cover opacity-70",
+            "absolute inset-0 size-full object-cover opacity-80 transition-transform duration-700 ease-out group-hover/date-card:scale-[1.025] motion-reduce:transition-none",
             visual.imagePosition,
           )}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-card/10" />
-        <div className="relative flex min-w-0 items-center gap-4">
-          <time
-            dateTime={item.nextDate}
-            className="flex size-16 shrink-0 flex-col items-center justify-center rounded-xl border bg-background/70 text-center backdrop-blur-md"
-          >
-            <span className="text-[0.65rem] leading-none font-medium tracking-[0.14em] text-muted-foreground uppercase">
-              {parts.month}
-            </span>
-            <span className="mt-1 font-heading text-2xl leading-none">
-              {parts.day}
-            </span>
-          </time>
-          <div className="min-w-0">
-            <CardTitle className="text-lg">{item.label}</CardTitle>
-            <CardDescription className="mt-1">
-              {parts.year} · {item.source}
-            </CardDescription>
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/15" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/25 to-background/10" />
+        <CardHeader className="relative mt-auto">
+          <div className="flex min-w-0 items-end gap-4">
+            <time
+              dateTime={item.nextDate}
+              className="flex min-w-14 shrink-0 flex-col"
+            >
+              <span className="text-[0.65rem] leading-none font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                {parts.month}
+              </span>
+              <span className="mt-1 font-heading text-4xl leading-none">
+                {parts.day}
+              </span>
+            </time>
+            <div className="min-w-0">
+              <CardTitle className="text-xl">{item.label}</CardTitle>
+              <CardDescription className="mt-1">
+                {parts.year} · {item.source}
+              </CardDescription>
+            </div>
           </div>
-        </div>
-        {item.customDate ? (
-          <CardAction className="relative flex items-center gap-1">
-            <PersonalDateDialog
-              personId={dashboard.profile.id}
-              date={item.customDate}
-              onChanged={onChanged}
-              trigger={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Edit ${item.label}`}
-                >
-                  <PencilIcon />
-                </Button>
+          {item.customDate ? (
+            <CardAction className="relative flex items-center gap-1">
+              <PersonalDateDialog
+                personId={dashboard.profile.id}
+                date={item.customDate}
+                onChanged={onChanged}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Edit ${item.label}`}
+                  >
+                    <PencilIcon />
+                  </Button>
+                }
+              />
+              <RemovePersonItemButton
+                personId={dashboard.profile.id}
+                item={{ type: "date", id: item.customDate.id }}
+                title={item.label}
+                onChanged={onChanged}
+              />
+            </CardAction>
+          ) : null}
+        </CardHeader>
+        <CardContent className="relative flex flex-wrap gap-2">
+          <Badge variant="secondary">
+            <DateIcon data-icon="inline-start" />
+            {visual.label}
+          </Badge>
+          {item.annually ? (
+            <Badge variant="outline">
+              <Repeat2Icon data-icon="inline-start" />
+              Every year
+            </Badge>
+          ) : null}
+          {attention ? (
+            <Badge
+              variant={
+                attention === "Expired" || attention === "Passed"
+                  ? "destructive"
+                  : "outline"
               }
-            />
-            <RemovePersonItemButton
-              personId={dashboard.profile.id}
-              item={{ type: "date", id: item.customDate.id }}
-              title={item.label}
-              onChanged={onChanged}
-            />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent className="mt-auto flex flex-wrap gap-2">
-        <Badge variant="secondary">
-          <DateIcon data-icon="inline-start" />
-          {visual.label}
-        </Badge>
-        {item.annually ? (
-          <Badge variant="outline">
-            <Repeat2Icon data-icon="inline-start" />
-            Every year
-          </Badge>
-        ) : null}
-        {attention ? (
-          <Badge
-            variant={
-              attention === "Expired" || attention === "Passed"
-                ? "destructive"
-                : "outline"
-            }
-          >
-            {attention}
-          </Badge>
-        ) : null}
-      </CardContent>
-    </Card>
+            >
+              {attention}
+            </Badge>
+          ) : null}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -1374,7 +1554,11 @@ function ImportantDatesSection({
   const dates = buildImportantDates(dashboard);
 
   return (
-    <section aria-labelledby="dates-title" className="flex flex-col gap-6">
+    <motion.section
+      aria-labelledby="dates-title"
+      className="flex flex-col gap-6"
+      variants={meStaggerVariants}
+    >
       <SectionHeading
         id="dates-title"
         icon={CalendarDaysIcon}
@@ -1388,7 +1572,10 @@ function ImportantDatesSection({
         }
       />
       {dates.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <motion.div
+          className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+          variants={meStaggerVariants}
+        >
           {dates.map((item) => (
             <ImportantDateCard
               key={item.id}
@@ -1397,7 +1584,7 @@ function ImportantDatesSection({
               onChanged={onChanged}
             />
           ))}
-        </div>
+        </motion.div>
       ) : (
         <ImageEmptyState
           image="/images/memories.jpg"
@@ -1413,7 +1600,7 @@ function ImportantDatesSection({
           }
         />
       )}
-    </section>
+    </motion.section>
   );
 }
 
@@ -1545,180 +1732,238 @@ export function MePage() {
   }
 
   return (
-    <main className="dark min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-6">
-        <AppHeader section="Profile" />
+    <MotionConfig reducedMotion="user">
+      <motion.main
+        className="dark min-h-screen overflow-x-hidden bg-background text-foreground"
+        variants={mePageVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <ModulePageContainer>
+          <motion.div variants={meRiseVariants}>
+            <AppHeader section="Profile" />
+          </motion.div>
 
-        {isLoading ? <PersonLoading /> : null}
+          <ModulePageContent>
+            {isLoading ? <PersonLoading /> : null}
 
-        {!isLoading && error ? (
-          <Alert variant="destructive" className="mt-12">
-            <AlertTitle>This personal profile is unavailable</AlertTitle>
-            <AlertDescription className="flex flex-col items-start gap-3">
-              {error}
+            {!isLoading && error ? (
+              <Alert variant="destructive">
+                <AlertTitle>This personal profile is unavailable</AlertTitle>
+                <AlertDescription className="flex flex-col items-start gap-3">
+                  {error}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void loadDashboard()}
+                  >
+                    Try again
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {!isLoading && !error && !dashboard ? (
+              <Empty className="min-h-[28rem] rounded-2xl border bg-card/20">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <UserRoundIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>Create or join your Family first</EmptyTitle>
+                  <EmptyDescription>
+                    Personal spaces are household perspectives, so LifeOS needs
+                    a household before it can resolve a person.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button asChild>
+                    <Link to="/family">Open Family</Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : null}
+
+            {!isLoading && dashboard ? (
+              <motion.div
+                className="flex flex-col"
+                variants={meViewVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <Tabs
+                  value={activeTab}
+                  onValueChange={(value) => setActiveTab(value as MeTab)}
+                  className="min-w-0"
+                >
+                  <motion.div
+                    className="border-b border-border/70"
+                    variants={meRiseVariants}
+                  >
+                    <TabsList
+                      variant="line"
+                      className="grid w-full grid-cols-4 gap-0 p-0 group-data-horizontal/tabs:h-14 sm:flex sm:w-fit sm:justify-start sm:gap-8"
+                    >
+                      {tabItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <TabsTrigger
+                            key={item.value}
+                            value={item.value}
+                            className="h-14 min-w-0 overflow-hidden px-1 text-[0.68rem] font-normal after:hidden sm:flex-none sm:px-0 sm:text-sm"
+                          >
+                            <Icon data-icon="inline-start" />
+                            <span className="truncate sm:hidden">
+                              {item.shortLabel}
+                            </span>
+                            <span className="hidden sm:inline">
+                              {item.label}
+                            </span>
+                            {activeTab === item.value ? (
+                              <motion.span
+                                layoutId="me-active-tab"
+                                className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-foreground"
+                                transition={meSpring}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                          </TabsTrigger>
+                        );
+                      })}
+                    </TabsList>
+                  </motion.div>
+
+                  <div id="me-content" className="scroll-mt-6">
+                    <TabsContent value="overview">
+                      <motion.div
+                        variants={meViewVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        <OverviewSection
+                          dashboard={dashboard}
+                          onEdit={() => setEditor("profile")}
+                          onChanged={loadDashboard}
+                          onAddDate={() => setEditor("date")}
+                        />
+                      </motion.div>
+                    </TabsContent>
+
+                    <TabsContent value="official" className="pt-8">
+                      <motion.div
+                        variants={meViewVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        <OfficialInformationSection
+                          dashboard={dashboard}
+                          onChanged={loadDashboard}
+                          onAdd={() => setEditor("record")}
+                        />
+                      </motion.div>
+                    </TabsContent>
+
+                    <TabsContent value="facts" className="pt-8">
+                      <motion.div
+                        variants={meViewVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        <UsefulFactsSection
+                          dashboard={dashboard}
+                          onChanged={loadDashboard}
+                          onAdd={() => setEditor("fact")}
+                        />
+                      </motion.div>
+                    </TabsContent>
+
+                    <TabsContent value="dates" className="pt-8">
+                      <motion.div
+                        variants={meViewVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        <ImportantDatesSection
+                          dashboard={dashboard}
+                          onChanged={loadDashboard}
+                          onAdd={() => setEditor("date")}
+                        />
+                      </motion.div>
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </motion.div>
+            ) : null}
+          </ModulePageContent>
+        </ModulePageContainer>
+
+        {!isLoading && !error && dashboard ? (
+          <>
+            <motion.div
+              className="fixed right-4 bottom-4 z-40 sm:right-6 sm:bottom-6"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={meSpring}
+            >
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => void loadDashboard()}
+                size="lg"
+                className="rounded-full border-money-accent/30 bg-card/90 shadow-lg backdrop-blur-md"
+                onClick={() => setCommandOpen(true)}
               >
-                Try again
+                <CommandIcon data-icon="inline-start" />
+                Actions
+                <Kbd className="ml-1 hidden sm:inline-flex">⌘ K</Kbd>
               </Button>
-            </AlertDescription>
-          </Alert>
+            </motion.div>
+
+            <MeCommandPalette
+              open={commandOpen}
+              onOpenChange={setCommandOpen}
+              onEdit={setEditor}
+              onNavigate={navigateToTab}
+            />
+
+            {editor === "profile" ? (
+              <PersonProfileDialog
+                profile={dashboard.profile}
+                onChanged={loadDashboard}
+                open
+                onOpenChange={(open) => setEditor(open ? "profile" : null)}
+                hideTrigger
+              />
+            ) : null}
+            {editor === "record" ? (
+              <OfficialRecordDialog
+                personId={dashboard.profile.id}
+                sourceDocuments={dashboard.sourceDocuments}
+                onChanged={loadDashboard}
+                open
+                onOpenChange={(open) => setEditor(open ? "record" : null)}
+                hideTrigger
+              />
+            ) : null}
+            {editor === "fact" ? (
+              <PersonFactDialog
+                personId={dashboard.profile.id}
+                onChanged={loadDashboard}
+                open
+                onOpenChange={(open) => setEditor(open ? "fact" : null)}
+                hideTrigger
+              />
+            ) : null}
+            {editor === "date" ? (
+              <PersonalDateDialog
+                personId={dashboard.profile.id}
+                onChanged={loadDashboard}
+                open
+                onOpenChange={(open) => setEditor(open ? "date" : null)}
+                hideTrigger
+              />
+            ) : null}
+          </>
         ) : null}
-
-        {!isLoading && !error && !dashboard ? (
-          <Empty className="mt-12 min-h-[28rem] rounded-2xl border bg-card/20">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <UserRoundIcon />
-              </EmptyMedia>
-              <EmptyTitle>Create or join your Family first</EmptyTitle>
-              <EmptyDescription>
-                Personal spaces are household perspectives, so LifeOS needs a
-                household before it can resolve a person.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button asChild>
-                <Link to="/family">Open Family</Link>
-              </Button>
-            </EmptyContent>
-          </Empty>
-        ) : null}
-
-        {!isLoading && dashboard ? (
-          <div className="mt-5 flex flex-col lg:mt-6">
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as MeTab)}
-              className="min-w-0"
-            >
-              <div className="border-b border-border/70">
-                <TabsList
-                  variant="line"
-                  className="grid w-full grid-cols-4 gap-0 p-0 group-data-horizontal/tabs:h-14 sm:flex sm:w-fit sm:justify-start sm:gap-8"
-                >
-                  {tabItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <TabsTrigger
-                        key={item.value}
-                        value={item.value}
-                        className="h-14 min-w-0 overflow-hidden px-1 text-[0.68rem] font-normal group-data-horizontal/tabs:after:bottom-0 sm:flex-none sm:px-0 sm:text-sm"
-                      >
-                        <Icon data-icon="inline-start" />
-                        <span className="truncate sm:hidden">
-                          {item.shortLabel}
-                        </span>
-                        <span className="hidden sm:inline">{item.label}</span>
-                      </TabsTrigger>
-                    );
-                  })}
-                </TabsList>
-              </div>
-
-              <div id="me-content" className="scroll-mt-6">
-                <TabsContent value="overview">
-                  <OverviewSection
-                    dashboard={dashboard}
-                    onEdit={() => setEditor("profile")}
-                    onChanged={loadDashboard}
-                    onAddDate={() => setEditor("date")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="official" className="pt-8">
-                  <OfficialInformationSection
-                    dashboard={dashboard}
-                    onChanged={loadDashboard}
-                    onAdd={() => setEditor("record")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="facts" className="pt-8">
-                  <UsefulFactsSection
-                    dashboard={dashboard}
-                    onChanged={loadDashboard}
-                    onAdd={() => setEditor("fact")}
-                  />
-                </TabsContent>
-
-                <TabsContent value="dates" className="pt-8">
-                  <ImportantDatesSection
-                    dashboard={dashboard}
-                    onChanged={loadDashboard}
-                    onAdd={() => setEditor("date")}
-                  />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
-        ) : null}
-      </div>
-
-      {!isLoading && !error && dashboard ? (
-        <>
-          <div className="fixed right-4 bottom-4 z-40 sm:right-6 sm:bottom-6">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="rounded-full border-money-accent/30 bg-card/90 shadow-lg backdrop-blur-md"
-              onClick={() => setCommandOpen(true)}
-            >
-              <CommandIcon data-icon="inline-start" />
-              Actions
-              <Kbd className="ml-1 hidden sm:inline-flex">⌘ K</Kbd>
-            </Button>
-          </div>
-
-          <MeCommandPalette
-            open={commandOpen}
-            onOpenChange={setCommandOpen}
-            onEdit={setEditor}
-            onNavigate={navigateToTab}
-          />
-
-          {editor === "profile" ? (
-            <PersonProfileDialog
-              profile={dashboard.profile}
-              onChanged={loadDashboard}
-              open
-              onOpenChange={(open) => setEditor(open ? "profile" : null)}
-              hideTrigger
-            />
-          ) : null}
-          {editor === "record" ? (
-            <OfficialRecordDialog
-              personId={dashboard.profile.id}
-              sourceDocuments={dashboard.sourceDocuments}
-              onChanged={loadDashboard}
-              open
-              onOpenChange={(open) => setEditor(open ? "record" : null)}
-              hideTrigger
-            />
-          ) : null}
-          {editor === "fact" ? (
-            <PersonFactDialog
-              personId={dashboard.profile.id}
-              onChanged={loadDashboard}
-              open
-              onOpenChange={(open) => setEditor(open ? "fact" : null)}
-              hideTrigger
-            />
-          ) : null}
-          {editor === "date" ? (
-            <PersonalDateDialog
-              personId={dashboard.profile.id}
-              onChanged={loadDashboard}
-              open
-              onOpenChange={(open) => setEditor(open ? "date" : null)}
-              hideTrigger
-            />
-          ) : null}
-        </>
-      ) : null}
-    </main>
+      </motion.main>
+    </MotionConfig>
   );
 }

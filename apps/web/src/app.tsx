@@ -9,6 +9,10 @@ import {
   ProtectedRoute,
   PublicOnlyRoute,
 } from "@/features/auth/auth-route-gates";
+import {
+  ModulePageContainer,
+  ModulePageContent,
+} from "@/components/module-page-layout";
 
 const HomePage = lazy(() =>
   import("@/features/home/home-page").then((module) => ({
@@ -71,23 +75,25 @@ function AppLoading() {
       aria-label="Loading LifeOS"
       aria-busy="true"
     >
-      <div className="mx-auto w-full max-w-[92rem] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <ModulePageContainer>
         <Skeleton className="h-11 w-36" />
 
-        <section className="mt-12 mb-8 lg:mt-22" aria-hidden="true">
-          <Skeleton className="h-11 w-72 max-w-full" />
-          <Skeleton className="mt-2.5 h-5 w-96 max-w-full" />
-        </section>
+        <ModulePageContent>
+          <section className="mb-8" aria-hidden="true">
+            <Skeleton className="h-11 w-72 max-w-full" />
+            <Skeleton className="mt-2.5 h-5 w-96 max-w-full" />
+          </section>
 
-        <section className="grid grid-cols-12 gap-4" aria-hidden="true">
-          {Array.from({ length: 10 }, (_, index) => (
-            <Skeleton
-              key={index}
-              className="col-span-12 min-h-49 rounded-lg sm:col-span-6 xl:col-span-3 xl:min-h-60"
-            />
-          ))}
-        </section>
-      </div>
+          <section className="grid grid-cols-12 gap-4" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, index) => (
+              <Skeleton
+                key={index}
+                className="col-span-12 min-h-49 rounded-lg sm:col-span-6 xl:col-span-3 xl:min-h-60"
+              />
+            ))}
+          </section>
+        </ModulePageContent>
+      </ModulePageContainer>
     </main>
   );
 }
